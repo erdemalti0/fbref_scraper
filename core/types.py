@@ -22,13 +22,14 @@ class player_info(BaseModel):
     player_number: str | None = None
 
 class match_squad(BaseModel):
-    lineup: str | None = None
+    home_lineup: str | None = None
+    away_lineup: str | None = None
 
-    home_first_eleven: str | None = None
-    home_bench: str | None = None
+    home_first_eleven: list[player_info] | None = None
+    home_bench: list[player_info] | None = None
 
-    away_first_eleven: str | None = None
-    away_bench: str | None = None
+    away_first_eleven: list[player_info] | None = None
+    away_bench: list[player_info] | None = None
 
 class general_match_info(BaseModel):
     match_id: str | None = None
