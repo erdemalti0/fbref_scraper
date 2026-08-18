@@ -95,7 +95,7 @@ async def main():
 
     page = await browser.get(url)
     squad = await scrapper(page, url)
-    print(squad)
+    #print(squad)
     browser.stop()
 
 if __name__ == "__main__":

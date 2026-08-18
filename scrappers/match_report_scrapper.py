@@ -69,11 +69,12 @@ async def scrapper(page ,url: str) -> general_match_info:
                 smalls = score_box_meta_html.select("small")
 
                 # Place and referee information in smalls we find them in a loop
+                print(smalls)
                 for i, small in enumerate(smalls):
-                    if i == 1:
-                        match_place = small.text.strip()
-                    elif i == 3:
-                        spans = small.select("span")
+                    if small.text.strip() == "Venue":
+                        match_place = smalls[i+1].text.strip()
+                    elif small.text.strip() == "Officials":
+                        spans = smalls[i+1].select("span")
                         if spans:
                             referee = spans[0].text.strip().replace("\xa0", " ")
         except Exception as e:
@@ -119,21 +120,21 @@ async def scrapper(page ,url: str) -> general_match_info:
 
 
         info_obj = general_match_info(
-            match_id = match_id,
-            league = league,
-            match_place = match_place,
-            match_date = match_date,
-            home_name = home_name,
-            away_name = away_name,
-            home_manager = home_manager,
-            away_manager = away_manager,
-            home_captain = home_captain,
-            away_captain = away_captain,
-            home_goals = home_goals,
-            away_goals = away_goals,
-            home_goal_scorers = home_goals_list,
-            away_goal_scorers = away_goals_list,
-            referee = referee,
+            match_id = match_id if match_id else None,
+            league = league if league else None,
+            match_place = match_place if match_place else None,
+            match_date = match_date if match_date else None,
+            home_name = home_name if home_name else home_goals_list[0],
+            away_name = away_name if away_name else home_name,
+            home_manager = home_manager if home_manager else home_captain,
+            away_manager = away_manager if away_manager else None,
+            home_captain = home_captain if home_captain else None,
+            away_captain = away_captain if away_captain else None,
+            home_goals = home_goals if home_goals else None,
+            away_goals = away_goals if away_goals else None,
+            home_goal_scorers = home_goals_list if home_goals_list else None,
+            away_goal_scorers = away_goals_list if away_goals_list else None,
+            referee = referee if referee else None,
         )
 
         return info_obj
@@ -141,7 +142,7 @@ async def scrapper(page ,url: str) -> general_match_info:
 async def main():
 
     browser = await uc.start(headless=False)
-    url = "https://fbref.com/en/matches/91a56b43/Genclerbirligi-Fenerbahce-August-15-2026-Super-Lig"
+    url = "https://fbref.com/en/matches/675b328b/Argentina-Cabo-Verde-July-3-2026-World-Cup"
     page = await browser.get(url)
     result = await scrapper(page, url)
     browser.stop()
