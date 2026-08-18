@@ -1,0 +1,59 @@
+from pydantic import BaseModel, model_validator
+from datetime import datetime
+from typing import Literal
+
+
+
+class goal_info(BaseModel):
+    # General goal information
+    scored_by: str | None = None
+    minutes: str | None = None
+
+    # Which side scored
+    home_or_away: Literal["home", "away"] | None = None
+
+    # Goal type
+    isPenalty: bool | None = None
+    isOwnGoal: bool | None = None
+
+
+class player_info(BaseModel):
+    player_name: str | None = None
+    player_number: str | None = None
+
+class match_squad(BaseModel):
+    lineup: str | None = None
+
+    home_first_eleven: str | None = None
+    home_bench: str | None = None
+
+    away_first_eleven: str | None = None
+    away_bench: str | None = None
+
+class general_match_info(BaseModel):
+    match_id: str | None = None
+    league: str | None = None
+    match_place: str | None = None
+    match_date: str | None = None
+
+    # Team informations
+    home_name: str | None = None
+    away_name: str | None = None
+
+    # Managers and referee
+    home_manager: str | None = None
+    away_manager: str | None = None
+    referee: str | None = None
+
+    # Captains
+    home_captain: str | None = None
+    away_captain: str | None = None
+
+    #Score infromations
+    home_goals: str | None = None
+    away_goals: str | None = None
+
+    #Goal scorers info
+    home_goal_scorers: list[goal_info] | None = None
+    away_goal_scorers: list[goal_info] | None = None
+
