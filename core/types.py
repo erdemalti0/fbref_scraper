@@ -14,22 +14,26 @@ class goal_info(BaseModel):
     home_or_away: Literal["home", "away"] | None = None
 
     # Goal type
-    isPenalty: bool | None = None
-    isOwnGoal: bool | None = None
+    isPenalty: bool | None = False
+    isOwnGoal: bool | None = False
 
 class player_info(BaseModel):
     player_name: str | None = None
     player_number: str | None = None
 
 class card_event(BaseModel):
-    card_type: Literal["yellow", "red"] | None = None
-    red_type: Literal["direct", "two_yellow"] | None = None
     player_name: str | None = None
     minutes: str | None = None
+    card_type: Literal["yellow_card", "red_card"] | None = None
+    red_type: Literal["direct", "two_yellow"] | None = None
 
 class substitution(BaseModel):
-    player_name_enter: str | None = None
-    player_name_exit: str | None = None
+    player_enter: str | None = None
+    player_exit: str | None = None
+    minutes: str | None = None
+
+class miss_penalty(BaseModel):
+    player_name: str | None = None
     minutes: str | None = None
 
 class events(BaseModel):
