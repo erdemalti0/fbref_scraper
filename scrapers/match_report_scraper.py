@@ -7,28 +7,29 @@ import nodriver as uc
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from core.types import GeneralMatchInfo, GoalInfo
+from core.browser import start_browser
 
-def goal_list_crator(content) -> list:
+def goal_list_creator(content) -> list:
     goals_list = []
     for goal in content:
         if goal.select_one("div[class='event_icon goal']"):
-            scored_by = goal.select_one("a[href*='player']").text.strip()
+            scorer = goal.select_one("a[href*='player']").text.strip()
             if "(P)" in goal.text.strip():
                 is_penalty = True
                 is_own_goal = False
-                minutes = goal.text.strip().split(" ")[-1]
+                minute = goal.text.strip().split(" ")[-1]
             elif "(OG)" in goal.text.strip():
                 is_penalty = False
                 is_own_goal = True
-                minutes = goal.text.strip().split(" ")[-1]
+                minute = goal.text.strip().split(" ")[-1]
             else:
                 is_penalty = False
                 is_own_goal = False
-                minutes = goal.text.strip().split(" ")[-1]
+                minute = goal.text.strip().split(" ")[-1]
 
             goal_obj = GoalInfo(
-                scored_by=scored_by,
-                minutes=minutes,
+                scorer=scorer,
+                minute=minute,
                 is_penalty=is_penalty,
                 is_own_goal=is_own_goal,
             )
@@ -37,7 +38,7 @@ def goal_list_crator(content) -> list:
 
     return goals_list
 
-async def scrapper(page ,url: str) -> GeneralMatchInfo:
+async def scrape_match_report(page ,url: str) -> GeneralMatchInfo:
 
     info_obj = GeneralMatchInfo()
 
@@ -63,11 +64,11 @@ async def scrapper(page ,url: str) -> GeneralMatchInfo:
         print(f"match_id alınamadı: {e}")
         info_obj.match_id = None
 
-    score_box_meta_html = soup.select_one('div[class="scorebox_meta"]')
+    scorebox_meta = soup.select_one('div[class="scorebox_meta"]')
 
     # Match date
     try:
-        data = score_box_meta_html.select_one('a[href*="/matches/"]').text.strip().replace(",", "")
+        data = scorebox_meta.select_one('a[href*="/matches/"]').text.strip().replace(",", "")
         info_obj.match_date = datetime.strptime(data, "%B %d %Y")
     except Exception as e:
         print(f"match_date alınamadı: {e}")
@@ -75,25 +76,25 @@ async def scrapper(page ,url: str) -> GeneralMatchInfo:
 
     # League
     try:
-        info_obj.league = score_box_meta_html.select_one('a[href*="/comps/"]').text.strip()
+        info_obj.league = scorebox_meta.select_one('a[href*="/comps/"]').text.strip()
     except Exception as e:
         print(f"league alınamadı: {e}")
         info_obj.league = None
 
     # Place information in smalls
     try:
-        smalls = score_box_meta_html.select("small")
+        smalls = scorebox_meta.select("small")
         for i, small in enumerate(smalls):
             if small.text.strip() == "Venue":
-                info_obj.match_place = smalls[i+1].text.strip()
+                info_obj.venue = smalls[i+1].text.strip()
                 break
     except Exception as e:
-        print(f"match_place alınamadı: {e}")
-        info_obj.match_place = None
+        print(f"venue alınamadı: {e}")
+        info_obj.venue = None
 
     # Referee information in smalls
     try:
-        smalls = score_box_meta_html.select("small")
+        smalls = scorebox_meta.select("small")
         for i, small in enumerate(smalls):
             if small.text.strip() == "Officials":
                 spans = smalls[i+1].select("span")
@@ -169,7 +170,7 @@ async def scrapper(page ,url: str) -> GeneralMatchInfo:
     try:
         goals_html = scorebox.select("div[class='event']")
         home_goals_html = goals_html[0].select("div")
-        info_obj.home_goal_scorers = goal_list_crator(home_goals_html)
+        info_obj.home_goal_scorers = goal_list_creator(home_goals_html)
     except Exception as e:
         print(f"home_goal_scorers alınamadı: {e}")
         info_obj.home_goal_scorers = None
@@ -178,7 +179,7 @@ async def scrapper(page ,url: str) -> GeneralMatchInfo:
     try:
         goals_html = scorebox.select("div[class='event']")
         away_goals_html = goals_html[1].select("div")
-        info_obj.away_goal_scorers = goal_list_crator(away_goals_html)
+        info_obj.away_goal_scorers = goal_list_creator(away_goals_html)
     except Exception as e:
         print(f"away_goal_scorers alınamadı: {e}")
         info_obj.away_goal_scorers = None
@@ -187,12 +188,14 @@ async def scrapper(page ,url: str) -> GeneralMatchInfo:
 
 async def main():
 
-    browser = await uc.start(headless=False)
-    url = "https://fbref.com/en/matches/675b328b/Argentina-Cabo-Verde-July-3-2026-World-Cup"
-    page = await browser.get(url)
-    result = await scrapper(page, url)
-    browser.stop()
-    print(result)
+    browser = await start_browser(headless=False)
+    try:
+        url = "https://fbref.com/en/matches/675b328b/Argentina-Cabo-Verde-July-3-2026-World-Cup"
+        page = await browser.get(url)
+        result = await scrape_match_report(page, url)
+        print(result)
+    finally:
+        browser.stop()
 if __name__ == "__main__":
 
     uc.loop().run_until_complete(main())

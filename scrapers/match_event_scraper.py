@@ -5,18 +5,17 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from core.types import Events, Substitution, CardEvent, GoalInfo, MissPenalty
+from core.types import Events, Substitution, CardEvent, GoalInfo, MissedPenalty
+from core.browser import start_browser
 
-def event_scrapper(content):
-    classes = content.get('class', None)
-
-    info_div = content.select('div')[1]
+def parse_event(event_div):
+    info_div = event_div.select('div')[1]
     if not info_div:
         print("Event bilgisi alınamadı")
         return None
 
     try:
-        minute_div = content.select('div')[0]
+        minute_div = event_div.select('div')[0]
         minute = "".join(minute_div.find_all(string=True, recursive=False)).strip()
         minute = minute.replace("&nbsp9;", "").strip().replace("'", "")
     except Exception as e:
@@ -29,59 +28,59 @@ def event_scrapper(content):
 
     if "goal" in icon_class and "own_goal" not in icon_class:
         return GoalInfo(
-            scored_by = players[0].text.strip() if players[0].text.strip() else None,
-            assist_by= players[1].text.strip() if len(players) > 1 else None,
-            minutes = minute,
+            scorer=players[0].text.strip() if players[0].text.strip() else None,
+            assist_provider=players[1].text.strip() if len(players) > 1 else None,
+            minute=minute,
         )
 
     elif "own_goal" in icon_class:
         return GoalInfo(
-            scored_by = players[0].text.strip() if players[0].text.strip() else None,
+            scorer=players[0].text.strip() if players[0].text.strip() else None,
             is_own_goal=True,
-            minutes = minute,
+            minute=minute,
         )
 
     elif "penalty_miss" in icon_class:
-        return GoalInfo(
-            scored_by = players[0].text.strip() if players[0].text.strip() else None,
-            minutes = minute,
+        return MissedPenalty(
+            player_name=players[0].text.strip() if players[0].text.strip() else None,
+            minute=minute,
         )
 
 
     elif "yellow_card" in icon_class:
         return CardEvent(
-            player_name= players[0].text.strip() if players[0].text.strip() else None,
-            minutes = minute,
-            card_type= "yellow_card",
+            player_name=players[0].text.strip() if players[0].text.strip() else None,
+            minute=minute,
+            card_type="yellow_card",
         )
 
 
     elif "red_card" in icon_class:
         return CardEvent(
-            player_name= players[0].text.strip() if players[0].text.strip() else None,
-            minutes = minute,
-            card_type= "red_card",
-            red_type= "direct",
+            player_name=players[0].text.strip() if players[0].text.strip() else None,
+            minute=minute,
+            card_type="red_card",
+            red_type="direct",
         )
 
     elif "yellow_red_card" in icon_class:
         return CardEvent(
-            player_name= players[0].text.strip() if players[0].text.strip() else None,
-            minutes = minute,
-            card_type= "red_card",
-            red_type= "two_yellow",
+            player_name=players[0].text.strip() if players[0].text.strip() else None,
+            minute=minute,
+            card_type="red_card",
+            red_type="two_yellow",
         )
 
     elif "substitute_in" in icon_class:
         return Substitution(
-            player_enter= players[0].text.strip() if players[0].text.strip() else None,
-            player_exit= players[1].text.strip() if len(players) > 1 else None,
-            minutes = minute,
+            player_in=players[0].text.strip() if players[0].text.strip() else None,
+            player_out=players[1].text.strip() if len(players) > 1 else None,
+            minute=minute,
         )
 
     return None
 
-async def scrapper(page, url):
+async def scrape_match_events(page, url):
 
     try:
         print("Scrapping events")
@@ -89,7 +88,7 @@ async def scrapper(page, url):
     except Exception:
         raise RuntimeError(f"Olaylar alınamadı {url}")
 
-    events_ = Events()
+    events = Events()
 
     html_content = await page.get_content()
     soup = BeautifulSoup(html_content, "html.parser")
@@ -107,36 +106,38 @@ async def scrapper(page, url):
     else:
         home_events = []
         for event in home_events_list:
-            event_obj = event_scrapper(event)
+            event_obj = parse_event(event)
             if event_obj:
                 home_events.append(event_obj)
 
         if home_events:
-            events_.home_events = home_events
+            events.home_events = home_events
 
     if not away_events_list:
         print("Deplasman eventleri alınamadı")
     else:
         away_events = []
         for event in away_events_list:
-            event_obj = event_scrapper(event)
+            event_obj = parse_event(event)
             if event_obj:
                 away_events.append(event_obj)
 
         if away_events:
-            events_.away_events = away_events
+            events.away_events = away_events
 
-    return events_
+    return events
 
 
 async def main():
-    browser = await uc.start(headless=False, no_sandbox=True )
-    url = "https://fbref.com/en/matches/675b328b/Argentina-Cabo-Verde-July-3-2026-World-Cup"
+    browser = await start_browser(headless=False, no_sandbox=True)
+    try:
+        url = "https://fbref.com/en/matches/675b328b/Argentina-Cabo-Verde-July-3-2026-World-Cup"
 
-    page = await browser.get(url)
-    event_results = await scrapper(page, url)
-    print(event_results)
-    browser.stop()
+        page = await browser.get(url)
+        event_results = await scrape_match_events(page, url)
+        print(event_results)
+    finally:
+        browser.stop()
 
 if __name__ == "__main__":
     uc.loop().run_until_complete(main())
