@@ -138,13 +138,13 @@ def event_scrapper(content):
 
 async def scrapper(page, url):
 
-    event = events()
-
     try:
         print("Scrapping events")
         await page.select('div[id="events_wrap"]')
     except Exception:
         raise RuntimeError(f"Olaylar alınamadı {url}")
+
+    events_ = events()
 
     html_content = await page.get_content()
     soup = BeautifulSoup(html_content, "html.parser")
@@ -167,7 +167,7 @@ async def scrapper(page, url):
                 home_events.append(event_obj)
 
         if home_events:
-            event.home_events = home_events
+            events_.home_events = home_events
 
     if not away_events_list:
         print("Deplasman eventleri alınamadı")
@@ -179,10 +179,9 @@ async def scrapper(page, url):
                 away_events.append(event_obj)
 
         if away_events:
-            event.away_events = away_events
+            events_.away_events = away_events
 
-    print(away_events, home_events)
-
+    return events_
 
 
 async def main():
@@ -190,7 +189,7 @@ async def main():
     url = "https://fbref.com/en/matches/dc6c3a39/Galatasaray-Yeni-Corumspor-August-14-2026-Super-Lig"
 
     page = await browser.get(url)
-    await scrapper(page, url)
+    event_results = await scrapper(page, url)
     browser.stop()
 
 if __name__ == "__main__":

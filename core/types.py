@@ -36,6 +36,46 @@ class miss_penalty(BaseModel):
     player_name: str | None = None
     minutes: str | None = None
 
+class team_stats(BaseModel):
+    home_name: str | None = None
+    away_name: str | None = None
+
+    home_possession: str | None = None
+    away_possession: str | None = None
+
+    home_shots: str | None = None
+    away_shots: str | None = None
+
+    home_shots_on_target: str | None = None
+    away_shots_on_target: str | None = None
+
+    home_missed_shots: str | None = None
+    away_missed_shots: str | None = None
+
+    home_saves: str | None = None
+    away_saves: str | None = None
+
+    home_yellow_cards: str | None = None
+    away_yellow_cards: str | None = None
+
+    home_red_cards: str | None = None
+    away_red_cards: str | None = None
+
+    home_fouls: str | None = None
+    away_fouls: str | None = None
+
+    home_corners: str | None = None
+    away_corners: str | None = None
+
+    home_crosses: str | None = None
+    away_crosses: str | None = None
+
+    home_interceptions: str | None = None
+    away_interceptions: str | None = None
+
+    home_offsides: str | None = None
+    away_offsides: str | None = None
+
 class events(BaseModel):
     home_events: list | None = None
     away_events: list | None = None
@@ -57,7 +97,7 @@ class general_match_info(BaseModel):
     match_date: str | None = None
     attandance: str | None = None
 
-    # Team informations
+    # Team information
     home_name: str | None = None
     away_name: str | None = None
 
@@ -70,11 +110,11 @@ class general_match_info(BaseModel):
     home_captain: str | None = None
     away_captain: str | None = None
 
-    #Score infromations
+    # Score infromations
     home_goals: str | None = None
     away_goals: str | None = None
 
-    #Goal scorers info
+    # Goalscorers info
     home_goal_scorers: list[goal_info] | None = None
     away_goal_scorers: list[goal_info] | None = None
 
