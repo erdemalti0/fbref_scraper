@@ -68,7 +68,7 @@ async def scrape_match_report(page ,url: str) -> GeneralMatchInfo:
 
     # Match date
     try:
-        data = scorebox_meta.select_one('a[href*="/matches/"]').text.strip().replace(",", "")
+        data = " ".join(scorebox_meta.select_one('a[href*="/matches/"]').text.strip().replace(",", "").split(" ")[1::])
         info_obj.match_date = datetime.strptime(data, "%B %d %Y")
     except Exception as e:
         print(f"match_date alınamadı: {e}")
@@ -80,6 +80,16 @@ async def scrape_match_report(page ,url: str) -> GeneralMatchInfo:
     except Exception as e:
         print(f"league alınamadı: {e}")
         info_obj.league = None
+
+    try:
+        smalls = scorebox_meta.select("small")
+        for i, small in enumerate(smalls):
+            if small.text.strip() == "Attendance":
+                info_obj.attendance = smalls[i+1].text.strip()
+                break
+    except Exception as e:
+        print(f"Attendance alınamadı: {e}")
+        info_obj.attendance = None
 
     # Place information in smalls
     try:
