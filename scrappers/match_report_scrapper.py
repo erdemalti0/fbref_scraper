@@ -39,11 +39,13 @@ def goal_list_crator(content) -> list:
 
 async def scrapper(page ,url: str) -> general_match_info:
 
+    info_obj = general_match_info()
+
     try:
         print("Scrapping: " + url)
         await page.wait_for('div.scorebox')
     except Exception:
-        RuntimeError(f"Sayfa alınamadı {url}")
+        raise RuntimeError(f"Sayfa alınamadı {url}")
 
     print("Scrapping başarılı")
 
@@ -51,93 +53,137 @@ async def scrapper(page ,url: str) -> general_match_info:
     soup = BeautifulSoup(html_content, 'html.parser')
 
     scorebox = soup.find('div', class_='scorebox')
+    if not scorebox:
+        raise RuntimeError(f"Scorebox bulunamadı: {url}")
 
-    if scorebox:
-        #match_info = general_match_info()
-        try:
-            match_id = url.split("/")[5]
-            score_box_meta_html = soup.select_one('div[class="scorebox_meta"]')
-            if score_box_meta_html:
-                # Get date data
-                data = score_box_meta_html.select_one('a[href*="/matches/"]').text.strip().replace(",", "").split(" ")
-                match_date = f"{data[2]}/{data[1]}/{data[-1]}"
+    # Match id from url
+    try:
+        info_obj.match_id = url.split("/")[5]
+    except Exception as e:
+        print(f"match_id alınamadı: {e}")
+        info_obj.match_id = None
 
-                # Get league
-                league = score_box_meta_html.select_one('a[href*="/comps/"]').text.strip()
+    score_box_meta_html = soup.select_one('div[class="scorebox_meta"]')
 
-                # Get smalls elements for referee and place information
-                smalls = score_box_meta_html.select("small")
+    # Match date
+    try:
+        data = score_box_meta_html.select_one('a[href*="/matches/"]').text.strip().replace(",", "").split(" ")
+        info_obj.match_date = f"{data[2]}/{data[1]}/{data[-1]}"
+    except Exception as e:
+        print(f"match_date alınamadı: {e}")
+        info_obj.match_date = None
 
-                # Place and referee information in smalls we find them in a loop
-                print(smalls)
-                for i, small in enumerate(smalls):
-                    if small.text.strip() == "Venue":
-                        match_place = smalls[i+1].text.strip()
-                    elif small.text.strip() == "Officials":
-                        spans = smalls[i+1].select("span")
-                        if spans:
-                            referee = spans[0].text.strip().replace("\xa0", " ")
-        except Exception as e:
-            raise RuntimeError(f"Scrapping başarısız: {url}\n{e}")
+    # League
+    try:
+        info_obj.league = score_box_meta_html.select_one('a[href*="/comps/"]').text.strip()
+    except Exception as e:
+        print(f"league alınamadı: {e}")
+        info_obj.league = None
 
-        print(f"Batch 1 başarılı devam ediliyor.")
+    # Place information in smalls
+    try:
+        smalls = score_box_meta_html.select("small")
+        for i, small in enumerate(smalls):
+            if small.text.strip() == "Venue":
+                info_obj.match_place = smalls[i+1].text.strip()
+                break
+    except Exception as e:
+        print(f"match_place alınamadı: {e}")
+        info_obj.match_place = None
 
-        try:
-            home_team_html = scorebox.find('div', id='sb_team_0')
-            away_team_html = scorebox.find('div', id='sb_team_1')
-            if home_team_html:
-                home_name = home_team_html.select_one("a[href*='/squads/']").text.strip()
+    # Referee information in smalls
+    try:
+        smalls = score_box_meta_html.select("small")
+        for i, small in enumerate(smalls):
+            if small.text.strip() == "Officials":
+                spans = smalls[i+1].select("span")
+                if spans:
+                    info_obj.referee = spans[0].text.strip().replace("\xa0", " ")
+                break
+    except Exception as e:
+        print(f"referee alınamadı: {e}")
+        info_obj.referee = None
 
-                # Datapoint is a class in this html code there is a 2 datapoint one of it
-                # give us a manager information other one captain
-                datapoints = home_team_html.select('div[class="datapoint"]')
-                home_manager = datapoints[0].text.strip().replace("Manager: ", "").replace("\xa0", " ")
-                home_captain = datapoints[1].select_one("a").text.strip().replace("\xa0", " ")
+    home_team_html = scorebox.find('div', id='sb_team_0')
+    away_team_html = scorebox.find('div', id='sb_team_1')
 
-            if away_team_html:
-                away_name = away_team_html.select_one("a[href*='/squads/']").text.strip()
+    # Home team name
+    try:
+        info_obj.home_name = home_team_html.select_one("a[href*='/squads/']").text.strip()
+    except Exception as e:
+        print(f"home_name alınamadı: {e}")
+        info_obj.home_name = None
 
-                datapoints = away_team_html.select('div[class="datapoint"]')
-                away_manager = datapoints[0].text.strip().replace("Manager: ", "").replace("\xa0", " ")
-                away_captain = datapoints[1].select_one("a").text.strip().replace("\xa0", " ")
+    # Home manager
+    # Datapoint is a class in this html code there is a 2 datapoint one of it
+    # give us a manager information other one captain
+    try:
+        datapoints = home_team_html.select('div[class="datapoint"]')
+        info_obj.home_manager = datapoints[0].text.strip().replace("Manager: ", "").replace("\xa0", " ")
+    except Exception as e:
+        print(f"home_manager alınamadı: {e}")
+        info_obj.home_manager = None
 
-            scores = soup.find_all("div", class_="score")
-            if scores:
-                home_goals = scores[0].text.strip()
-                away_goals = scores[1].text.strip()
+    # Home captain
+    try:
+        datapoints = home_team_html.select('div[class="datapoint"]')
+        info_obj.home_captain = datapoints[1].select_one("a").text.strip().replace("\xa0", " ")
+    except Exception as e:
+        print(f"home_captain alınamadı: {e}")
+        info_obj.home_captain = None
 
-            home_goals_list = []
-            goals_html = scorebox.select("div[class='event']")
-            if goals_html:
-                home_goals_html = goals_html[0].select("div")
-                away_goals_html = goals_html[1].select("div")
+    # Away team name
+    try:
+        info_obj.away_name = away_team_html.select_one("a[href*='/squads/']").text.strip()
+    except Exception as e:
+        print(f"away_name alınamadı: {e}")
+        info_obj.away_name = None
 
-                home_goals_list = goal_list_crator(home_goals_html)
-                away_goals_list = goal_list_crator(away_goals_html)
+    # Away manager
+    try:
+        datapoints = away_team_html.select('div[class="datapoint"]')
+        info_obj.away_manager = datapoints[0].text.strip().replace("Manager: ", "").replace("\xa0", " ")
+    except Exception as e:
+        print(f"away_manager alınamadı: {e}")
+        info_obj.away_manager = None
 
-        except Exception as e:
-            raise RuntimeError(f"Scrapping başarısız: {url}\n{e}")
+    # Away captain
+    try:
+        datapoints = away_team_html.select('div[class="datapoint"]')
+        info_obj.away_captain = datapoints[1].select_one("a").text.strip().replace("\xa0", " ")
+    except Exception as e:
+        print(f"away_captain alınamadı: {e}")
+        info_obj.away_captain = None
 
+    # Scores
+    try:
+        scores = soup.find_all("div", class_="score")
+        info_obj.home_goals = scores[0].text.strip()
+        info_obj.away_goals = scores[1].text.strip()
+    except Exception as e:
+        print(f"skorlar alınamadı: {e}")
+        info_obj.home_goals = None
+        info_obj.away_goals = None
 
-        info_obj = general_match_info(
-            match_id = match_id if match_id else None,
-            league = league if league else None,
-            match_place = match_place if match_place else None,
-            match_date = match_date if match_date else None,
-            home_name = home_name if home_name else home_goals_list[0],
-            away_name = away_name if away_name else home_name,
-            home_manager = home_manager if home_manager else home_captain,
-            away_manager = away_manager if away_manager else None,
-            home_captain = home_captain if home_captain else None,
-            away_captain = away_captain if away_captain else None,
-            home_goals = home_goals if home_goals else None,
-            away_goals = away_goals if away_goals else None,
-            home_goal_scorers = home_goals_list if home_goals_list else None,
-            away_goal_scorers = away_goals_list if away_goals_list else None,
-            referee = referee if referee else None,
-        )
+    # Home goal scorers
+    try:
+        goals_html = scorebox.select("div[class='event']")
+        home_goals_html = goals_html[0].select("div")
+        info_obj.home_goal_scorers = goal_list_crator(home_goals_html)
+    except Exception as e:
+        print(f"home_goal_scorers alınamadı: {e}")
+        info_obj.home_goal_scorers = None
 
-        return info_obj
+    # Away goal scorers
+    try:
+        goals_html = scorebox.select("div[class='event']")
+        away_goals_html = goals_html[1].select("div")
+        info_obj.away_goal_scorers = goal_list_crator(away_goals_html)
+    except Exception as e:
+        print(f"away_goal_scorers alınamadı: {e}")
+        info_obj.away_goal_scorers = None
+
+    return info_obj
 
 async def main():
 

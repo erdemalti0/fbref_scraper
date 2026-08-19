@@ -25,8 +25,8 @@ def squad_scrapper(content):
             )
 
             first_eleven.append(player_obj)
-        except Exception:
-            print("Oyuncu verisi çekme başarısız")
+        except Exception as e:
+            print(f"Oyuncu verisi çekme başarısız: {e}")
 
         i += 1
 
@@ -41,8 +41,8 @@ def squad_scrapper(content):
             )
 
             bench.append(player_obj)
-        except Exception:
-            print("Oyuncu verisi çekme başarısız")
+        except Exception as e:
+            print(f"Oyuncu verisi çekme başarısız: {e}")
 
         i += 1
 
@@ -51,41 +51,70 @@ def squad_scrapper(content):
 
 async def scrapper(page, url: str) -> match_squad:
 
+    squad_obj = match_squad()
+
     try:
         print("Scrapping Squad")
         await page.wait_for('div[class="field_wrap"]')
     except Exception:
-        RuntimeError(f"Kadrolar alınamadı {url}")
+        raise RuntimeError(f"Kadrolar alınamadı {url}")
 
     html_content = await page.get_content()
     soup = BeautifulSoup(html_content, "html.parser")
 
     squad_field = soup.select('div[class="lineup"]')
+    if not squad_field:
+        raise RuntimeError(f"Kadro alanı bulunamadı: {url}")
 
-    if squad_field:
+    # Home squad
+    try:
         home_squad_table = squad_field[0].select("tbody")
+        home_table = home_squad_table[0].select("tr")
+    except Exception as e:
+        print(f"home kadro tablosu alınamadı: {e}")
+        home_table = []
+
+    # Home lineup
+    try:
+        squad_obj.home_lineup = home_table[0].select_one("th").text.split(" ")[-1].lstrip("(").rsplit(")")[0]
+    except Exception as e:
+        print(f"home_lineup alınamadı: {e}")
+        squad_obj.home_lineup = None
+
+    # Home first eleven and bench
+    try:
+        home_first_eleven, home_bench = squad_scrapper(home_table[1::])
+        squad_obj.home_first_eleven = home_first_eleven
+        squad_obj.home_bench = home_bench
+    except Exception as e:
+        print(f"home ilk 11 / yedekler alınamadı: {e}")
+        squad_obj.home_first_eleven = None
+        squad_obj.home_bench = None
+
+    # Away squad
+    try:
         away_squad_table = squad_field[1].select("tbody")
+        away_table = away_squad_table[0].select("tr")
+    except Exception as e:
+        print(f"away kadro tablosu alınamadı: {e}")
+        away_table = []
 
-        if home_squad_table:
-            home_table = home_squad_table[0].select("tr")
-            home_lineup = home_table[0].select_one("th").text.split(" ")[-1].lstrip("(").rsplit(")")[0]
+    # Away lineup
+    try:
+        squad_obj.away_lineup = away_table[0].select_one("th").text.split(" ")[-1].lstrip("(").rsplit(")")[0]
+    except Exception as e:
+        print(f"away_lineup alınamadı: {e}")
+        squad_obj.away_lineup = None
 
-            home_first_eleven, home_bench = squad_scrapper(home_table[1::])
-
-        if away_squad_table:
-            away_table = away_squad_table[0].select("tr")
-            away_lineup = away_table[0].select_one("th").text.split(" ")[-1].lstrip("(").rsplit(")")[0]
-
-            away_first_eleven, away_bench = squad_scrapper(away_table[1::])
-
-    squad_obj = match_squad(
-        home_lineup=home_lineup,
-        away_lineup=away_lineup,
-        home_first_eleven=home_first_eleven,
-        home_bench=home_bench,
-        away_first_eleven=away_first_eleven,
-        away_bench=away_bench,
-    )
+    # Away first eleven and bench
+    try:
+        away_first_eleven, away_bench = squad_scrapper(away_table[1::])
+        squad_obj.away_first_eleven = away_first_eleven
+        squad_obj.away_bench = away_bench
+    except Exception as e:
+        print(f"away ilk 11 / yedekler alınamadı: {e}")
+        squad_obj.away_first_eleven = None
+        squad_obj.away_bench = None
 
     return squad_obj
 

@@ -28,8 +28,8 @@ class card_event(BaseModel):
     minutes: str | None = None
 
 class substitution(BaseModel):
-    player_enter: str | None = None
-    player_exit: str | None = None
+    player_name_enter: str | None = None
+    player_name_exit: str | None = None
     minutes: str | None = None
 
 class events(BaseModel):
