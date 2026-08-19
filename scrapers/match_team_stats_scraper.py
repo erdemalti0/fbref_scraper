@@ -94,21 +94,21 @@ async def scrape_team_stats(page):
                         stats.away_yellow_cards = len(card_infos[1].select('span[class="yellow_card"]'))
                         stats.away_red_cards = len(card_infos[1].select('span[class="red_card"]'))
 
-                        if card_infos[0].select_one('span[class="yellow_red_card"]'):
-                            if stats.home_red_cards != 0:
-                                stats.home_red_cards += len(card_infos[0].select('span[class="red_card"]'))
-                            else:
-                                stats.home_red_cards = len(card_infos[0].select('span[class="red_card"]'))
-
-                        if card_infos[1].select('span[class="yellow_red_card"]'):
-                            if stats.away_red_cards != 0:
-                                stats.away_red_cards += len(card_infos[1].select('span[class="red_card"]'))
-                            else:
-                                stats.away_red_cards = len(card_infos[1].select('span[class="red_card"]'))
-
                     except Exception as e:
                         print(f"Kart bilgileri çekilemedi {e}")
 
+                    if card_infos[0].select('span[class="yellow_red_card"]'):
+
+                        try:
+                            stats.home_red_cards = (stats.home_red_cards or 0) + len(card_infos[0].select('span[class="yellow_red_card"]'))
+                        except Exception as e:
+                            pass
+
+                    elif card_infos[1].select('span[class="yellow_red_card"]'):
+                        try:
+                            stats.away_red_cards = (stats.away_red_cards or 0) + len(card_infos[1].select('span[class="yellow_red_card"]'))
+                        except Exception as e:
+                            pass
         extra = soup.find('div', id='team_stats_extra')
         if extra:
             divs = extra.select('div')
