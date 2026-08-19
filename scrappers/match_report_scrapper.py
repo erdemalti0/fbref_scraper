@@ -13,11 +13,11 @@ def goal_list_crator(content) -> list:
     for goal in content:
         if goal.select_one("div[class='event_icon goal']"):
             scored_by = goal.select_one("a[href*='player']").text.strip()
-            if "P" in goal.text.strip():
+            if "(P)" in goal.text.strip():
                 is_penalty = True
                 is_own_goal = False
                 minutes = goal.text.strip().split(" ")[-1]
-            elif "OG" in goal.text.strip():
+            elif "(OG)" in goal.text.strip():
                 is_penalty = False
                 is_own_goal = True
                 minutes = goal.text.strip().split(" ")[-1]

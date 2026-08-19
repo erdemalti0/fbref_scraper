@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import Literal
 
 
-
 class GoalInfo(BaseModel):
     # General goal information
     scored_by: str | None = None

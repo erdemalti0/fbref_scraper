@@ -23,116 +23,61 @@ def event_scrapper(content):
         minute = None
         print(f"Dakika bilgisi alınamadı {e}")
 
-    if info_div.select_one('div[class="event_icon goal"]'):
-        event_obj = GoalInfo()
-        event_obj.minutes = minute
+    players = info_div.select("a")
+    icon = info_div.select_one("div[class*='event_icon']")
+    icon_class = " ".join(icon.get("class", [])) if icon else ""
 
-        try:
-            scored_by = info_div.select("a")[0].text.strip()
-            event_obj.scored_by = scored_by
-        except Exception as e:
-            event_obj.scored_by = None
-            print(f"Gol atan oyuncu bulunamadı. {e}")
+    if "goal" in icon_class and "own_goal" not in icon_class:
+        return GoalInfo(
+            scored_by = players[0].text.strip() if players[0].text.strip() else None,
+            assist_by= players[1].text.strip() if len(players) > 1 else None,
+            minutes = minute,
+        )
 
-        if len(info_div.select("a")) > 1:
-            try:
-                assist_by = info_div.select("a")[1].text.strip()
-                event_obj.assist_by = assist_by
-            except Exception as e:
-                event_obj.assist_by = None
-                print(f"Asist yapan oyuncu bulunamadı")
-        else:
-            event_obj.assist_by = None
+    elif "own_goal" in icon_class:
+        return GoalInfo(
+            scored_by = players[0].text.strip() if players[0].text.strip() else None,
+            is_own_goal=True,
+            minutes = minute,
+        )
 
-        return event_obj
+    elif "penalty_miss" in icon_class:
+        return GoalInfo(
+            scored_by = players[0].text.strip() if players[0].text.strip() else None,
+            minutes = minute,
+        )
 
-    elif info_div.select_one('div[class="event_icon own_goal"]'):
-        event_obj = GoalInfo()
-        event_obj.minutes = minute
-        event_obj.is_own_goal = True
 
-        try:
-            player_name = info_div.select_one("a").text.strip()
-            event_obj.player_name = player_name
-        except Exception as e:
-            print(f"Oyuncu ismi alınamadı {e}")
+    elif "yellow_card" in icon_class:
+        return CardEvent(
+            player_name= players[0].text.strip() if players[0].text.strip() else None,
+            minutes = minute,
+            card_type= "yellow_card",
+        )
 
-        return event_obj
-    elif info_div.select_one('div[class="event_icon penalty_miss"]'):
-        event_obj = MissPenalty()
-        event_obj.minutes = minute
 
-        try:
-            player_name = info_div.select_one("a").text.strip()
-            event_obj.player_name = player_name
-        except Exception as e:
-            print(f"Oyuncu ismi alınamadı {e}")
+    elif "red_card" in icon_class:
+        return CardEvent(
+            player_name= players[0].text.strip() if players[0].text.strip() else None,
+            minutes = minute,
+            card_type= "red_card",
+            red_type= "direct",
+        )
 
-        return event_obj
+    elif "yellow_red_card" in icon_class:
+        return CardEvent(
+            player_name= players[0].text.strip() if players[0].text.strip() else None,
+            minutes = minute,
+            card_type= "red_card",
+            red_type= "two_yellow",
+        )
 
-    elif info_div.select_one('div[class="event_icon yellow_card"]'):
-        event_obj = CardEvent()
-        event_obj.minutes = minute
-        event_obj.card_type = "yellow_card"
-
-        try:
-            player_name = info_div.select_one("a").text.strip()
-            event_obj.player_name = player_name
-        except Exception as e:
-            event_obj.player_name = None
-            print(f"Oyuncu ismi alınamadı {e}")
-
-        return event_obj
-
-    elif info_div.select_one('div[class="event_icon red_card"]'):
-        event_obj = CardEvent()
-        event_obj.minutes = minute
-
-        event_obj.card_type = "red_card"
-        event_obj.red_type = ("direct")
-        try:
-            player_name = info_div.select_one("a").text.strip()
-            event_obj.player_name = player_name
-        except Exception as e:
-            event_obj.player_name = None
-            print(f"Oyuncu ismi alınamadı {e}")
-
-        return event_obj
-
-    elif info_div.select_one('div[class="event_icon yellow_red_card"]'):
-        event_obj = CardEvent()
-        event_obj.minutes = minute
-
-        event_obj.card_type = "red_card"
-        event_obj.red_type = ("two_yellow")
-        try:
-            player_name = info_div.select_one("a").text.strip()
-            event_obj.player_name = player_name
-        except Exception as e:
-            event_obj.player_name = None
-            print(f"Oyuncu ismi alınamadı {e}")
-
-        return event_obj
-
-    elif info_div.select_one('div[class="event_icon substitute_in"]'):
-        event_obj = Substitution()
-        event_obj.minutes = minute
-
-        try:
-            player_enter = info_div.select("a")[0].text.strip()
-            event_obj.player_enter = player_enter
-        except Exception as e:
-            event_obj.player_enter = None
-            print(f"Giren oyuncu ismi alınamadı {e}")
-
-        try:
-            player_exit = info_div.select("a")[1].text.strip()
-            event_obj.player_exit = player_exit
-        except Exception as e:
-            event_obj.player_exit = None
-            print(f"Çıkan oyuncu ismi alınamadı {e}")
-
-        return event_obj
+    elif "substitute_in" in icon_class:
+        return Substitution(
+            player_enter= players[0].text.strip() if players[0].text.strip() else None,
+            player_exit= players[1].text.strip() if len(players) > 1 else None,
+            minutes = minute,
+        )
 
     return None
 
@@ -186,10 +131,11 @@ async def scrapper(page, url):
 
 async def main():
     browser = await uc.start(headless=False, no_sandbox=True )
-    url = "https://fbref.com/en/matches/dc6c3a39/Galatasaray-Yeni-Corumspor-August-14-2026-Super-Lig"
+    url = "https://fbref.com/en/matches/675b328b/Argentina-Cabo-Verde-July-3-2026-World-Cup"
 
     page = await browser.get(url)
     event_results = await scrapper(page, url)
+    print(event_results)
     browser.stop()
 
 if __name__ == "__main__":
