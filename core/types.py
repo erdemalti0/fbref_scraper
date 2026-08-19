@@ -7,8 +7,8 @@ from typing import Literal
 class goal_info(BaseModel):
     # General goal information
     scored_by: str | None = None
-    minutes: str | None = None
     asist_by: str | None = None
+    minutes: str | None = None
 
     # Which side scored
     home_or_away: Literal["home", "away"] | None = None
