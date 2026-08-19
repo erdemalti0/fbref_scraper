@@ -4,39 +4,36 @@ from typing import Literal
 
 
 
-class goal_info(BaseModel):
+class GoalInfo(BaseModel):
     # General goal information
     scored_by: str | None = None
-    asist_by: str | None = None
+    assist_by: str | None = None
     minutes: str | None = None
 
-    # Which side scored
-    home_or_away: Literal["home", "away"] | None = None
-
     # Goal type
-    isPenalty: bool | None = False
-    isOwnGoal: bool | None = False
+    is_penalty: bool = False
+    is_own_goal: bool = False
 
-class player_info(BaseModel):
+class PlayerInfo(BaseModel):
     player_name: str | None = None
-    player_number: str | None = None
+    player_number: int | None = None
 
-class card_event(BaseModel):
+class CardEvent(BaseModel):
     player_name: str | None = None
     minutes: str | None = None
     card_type: Literal["yellow_card", "red_card"] | None = None
     red_type: Literal["direct", "two_yellow"] | None = None
 
-class substitution(BaseModel):
+class Substitution(BaseModel):
     player_enter: str | None = None
     player_exit: str | None = None
     minutes: str | None = None
 
-class miss_penalty(BaseModel):
+class MissPenalty(BaseModel):
     player_name: str | None = None
     minutes: str | None = None
 
-class team_stats(BaseModel):
+class TeamStats(BaseModel):
     home_name: str | None = None
     away_name: str | None = None
 
@@ -76,26 +73,26 @@ class team_stats(BaseModel):
     home_offsides: str | None = None
     away_offsides: str | None = None
 
-class events(BaseModel):
-    home_events: list | None = None
-    away_events: list | None = None
+class Events(BaseModel):
+    home_events: list[GoalInfo | CardEvent | Substitution | MissPenalty] | None = None
+    away_events: list[GoalInfo | CardEvent | Substitution | MissPenalty] | None = None
 
-class match_squad(BaseModel):
+class MatchSquad(BaseModel):
     home_lineup: str | None = None
     away_lineup: str | None = None
 
-    home_first_eleven: list[player_info] | None = None
-    home_bench: list[player_info] | None = None
+    home_first_eleven: list[PlayerInfo] | None = None
+    home_bench: list[PlayerInfo] | None = None
 
-    away_first_eleven: list[player_info] | None = None
-    away_bench: list[player_info] | None = None
+    away_first_eleven: list[PlayerInfo] | None = None
+    away_bench: list[PlayerInfo] | None = None
 
-class general_match_info(BaseModel):
+class GeneralMatchInfo(BaseModel):
     match_id: str | None = None
     league: str | None = None
     match_place: str | None = None
-    match_date: str | None = None
-    attandance: str | None = None
+    match_date: datetime | None = None
+    attendance: str | None = None
 
     # Team information
     home_name: str | None = None
@@ -110,11 +107,11 @@ class general_match_info(BaseModel):
     home_captain: str | None = None
     away_captain: str | None = None
 
-    # Score infromations
-    home_goals: str | None = None
-    away_goals: str | None = None
+    # Score information
+    home_goals: int | None = None
+    away_goals: int | None = None
 
     # Goalscorers info
-    home_goal_scorers: list[goal_info] | None = None
-    away_goal_scorers: list[goal_info] | None = None
+    home_goal_scorers: list[GoalInfo] | None = None
+    away_goal_scorers: list[GoalInfo] | None = None
 

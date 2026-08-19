@@ -1,11 +1,12 @@
 import sys
 from bs4 import BeautifulSoup
 from pathlib import Path
+from datetime import datetime
 import nodriver as uc
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from core.types import general_match_info, goal_info
+from core.types import GeneralMatchInfo, GoalInfo
 
 def goal_list_crator(content) -> list:
     goals_list = []
@@ -13,33 +14,32 @@ def goal_list_crator(content) -> list:
         if goal.select_one("div[class='event_icon goal']"):
             scored_by = goal.select_one("a[href*='player']").text.strip()
             if "P" in goal.text.strip():
-                isPenalty = True
-                isOwnGoal = False
+                is_penalty = True
+                is_own_goal = False
                 minutes = goal.text.strip().split(" ")[-1]
             elif "OG" in goal.text.strip():
-                isPenalty = False
-                isOwnGoal = True
+                is_penalty = False
+                is_own_goal = True
                 minutes = goal.text.strip().split(" ")[-1]
             else:
-                isPenalty = False
-                isOwnGoal = False
+                is_penalty = False
+                is_own_goal = False
                 minutes = goal.text.strip().split(" ")[-1]
 
-            goal_obj = goal_info(
+            goal_obj = GoalInfo(
                 scored_by=scored_by,
                 minutes=minutes,
-                home_or_away="home",
-                isPenalty=isPenalty,
-                isOwnGoal=isOwnGoal,
+                is_penalty=is_penalty,
+                is_own_goal=is_own_goal,
             )
 
             goals_list.append(goal_obj)
 
     return goals_list
 
-async def scrapper(page ,url: str) -> general_match_info:
+async def scrapper(page ,url: str) -> GeneralMatchInfo:
 
-    info_obj = general_match_info()
+    info_obj = GeneralMatchInfo()
 
     try:
         print("Scrapping: " + url)
@@ -67,8 +67,8 @@ async def scrapper(page ,url: str) -> general_match_info:
 
     # Match date
     try:
-        data = score_box_meta_html.select_one('a[href*="/matches/"]').text.strip().replace(",", "").split(" ")
-        info_obj.match_date = f"{data[2]}/{data[1]}/{data[-1]}"
+        data = score_box_meta_html.select_one('a[href*="/matches/"]').text.strip().replace(",", "")
+        info_obj.match_date = datetime.strptime(data, "%B %d %Y")
     except Exception as e:
         print(f"match_date alınamadı: {e}")
         info_obj.match_date = None
@@ -158,8 +158,8 @@ async def scrapper(page ,url: str) -> general_match_info:
     # Scores
     try:
         scores = soup.find_all("div", class_="score")
-        info_obj.home_goals = scores[0].text.strip()
-        info_obj.away_goals = scores[1].text.strip()
+        info_obj.home_goals = int(scores[0].text.strip())
+        info_obj.away_goals = int(scores[1].text.strip())
     except Exception as e:
         print(f"skorlar alınamadı: {e}")
         info_obj.home_goals = None

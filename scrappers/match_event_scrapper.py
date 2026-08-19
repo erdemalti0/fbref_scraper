@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from core.types import events, substitution, card_event, goal_info, miss_penalty
+from core.types import Events, Substitution, CardEvent, GoalInfo, MissPenalty
 
 def event_scrapper(content):
     classes = content.get('class', None)
@@ -24,7 +24,7 @@ def event_scrapper(content):
         print(f"Dakika bilgisi alınamadı {e}")
 
     if info_div.select_one('div[class="event_icon goal"]'):
-        event_obj = goal_info()
+        event_obj = GoalInfo()
         event_obj.minutes = minute
 
         try:
@@ -36,20 +36,20 @@ def event_scrapper(content):
 
         if len(info_div.select("a")) > 1:
             try:
-                asist_by = info_div.select("a")[1].text.strip()
-                event_obj.asist_by = asist_by
+                assist_by = info_div.select("a")[1].text.strip()
+                event_obj.assist_by = assist_by
             except Exception as e:
-                event_obj.asist_by = None
+                event_obj.assist_by = None
                 print(f"Asist yapan oyuncu bulunamadı")
         else:
-            event_obj.asist_by = None
+            event_obj.assist_by = None
 
         return event_obj
 
     elif info_div.select_one('div[class="event_icon own_goal"]'):
-        event_obj = goal_info()
+        event_obj = GoalInfo()
         event_obj.minutes = minute
-        event_obj.isOwnGoal = True
+        event_obj.is_own_goal = True
 
         try:
             player_name = info_div.select_one("a").text.strip()
@@ -59,7 +59,7 @@ def event_scrapper(content):
 
         return event_obj
     elif info_div.select_one('div[class="event_icon penalty_miss"]'):
-        event_obj = miss_penalty()
+        event_obj = MissPenalty()
         event_obj.minutes = minute
 
         try:
@@ -71,7 +71,7 @@ def event_scrapper(content):
         return event_obj
 
     elif info_div.select_one('div[class="event_icon yellow_card"]'):
-        event_obj = card_event()
+        event_obj = CardEvent()
         event_obj.minutes = minute
         event_obj.card_type = "yellow_card"
 
@@ -85,7 +85,7 @@ def event_scrapper(content):
         return event_obj
 
     elif info_div.select_one('div[class="event_icon red_card"]'):
-        event_obj = card_event()
+        event_obj = CardEvent()
         event_obj.minutes = minute
 
         event_obj.card_type = "red_card"
@@ -100,7 +100,7 @@ def event_scrapper(content):
         return event_obj
 
     elif info_div.select_one('div[class="event_icon yellow_red_card"]'):
-        event_obj = card_event()
+        event_obj = CardEvent()
         event_obj.minutes = minute
 
         event_obj.card_type = "red_card"
@@ -115,7 +115,7 @@ def event_scrapper(content):
         return event_obj
 
     elif info_div.select_one('div[class="event_icon substitute_in"]'):
-        event_obj = substitution()
+        event_obj = Substitution()
         event_obj.minutes = minute
 
         try:
@@ -144,7 +144,7 @@ async def scrapper(page, url):
     except Exception:
         raise RuntimeError(f"Olaylar alınamadı {url}")
 
-    events_ = events()
+    events_ = Events()
 
     html_content = await page.get_content()
     soup = BeautifulSoup(html_content, "html.parser")

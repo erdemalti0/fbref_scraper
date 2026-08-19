@@ -5,7 +5,7 @@ import nodriver as uc
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from core.types import match_squad, player_info
+from core.types import MatchSquad, PlayerInfo
 
 def squad_scrapper(content):
     first_eleven = []
@@ -19,9 +19,9 @@ def squad_scrapper(content):
         try:
             player_name = content[i].select_one("a").text.strip()
             player_number = content[i].select("td")[0].text.strip()
-            player_obj = player_info(
+            player_obj = PlayerInfo(
                 player_name=player_name,
-                player_number=player_number,
+                player_number=int(player_number) if player_number.isdigit() else None,
             )
 
             first_eleven.append(player_obj)
@@ -35,9 +35,9 @@ def squad_scrapper(content):
         try:
             player_name = content[i].select_one("a").text.strip()
             player_number = content[i].select("td")[0].text.strip()
-            player_obj = player_info(
+            player_obj = PlayerInfo(
                 player_name=player_name,
-                player_number=player_number,
+                player_number=int(player_number) if player_number.isdigit() else None,
             )
 
             bench.append(player_obj)
@@ -49,9 +49,9 @@ def squad_scrapper(content):
     return first_eleven, bench
 
 
-async def scrapper(page, url: str) -> match_squad:
+async def scrapper(page, url: str) -> MatchSquad:
 
-    squad_obj = match_squad()
+    squad_obj = MatchSquad()
 
     try:
         print("Scrapping Squad")
