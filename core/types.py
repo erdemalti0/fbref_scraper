@@ -32,6 +32,16 @@ class MissedPenalty(BaseModel):
     player_name: str | None = None
     minute: str | None = None
 
+class PlayerStats(BaseModel, extra="allow"):
+    player: str | None = None
+
+class MatchPlayerStats(BaseModel):
+    home_stats: list[PlayerStats] | None = None
+    away_stats: list[PlayerStats] | None = None
+
+    home_goalkeeper_stats: list[PlayerStats] | None = None
+    away_goalkeeper_stats: list[PlayerStats] | None = None
+
 class TeamStats(BaseModel):
     home_name: str | None = None
     away_name: str | None = None

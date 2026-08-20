@@ -109,6 +109,7 @@ async def scrape_team_stats(page):
                             stats.away_red_cards = (stats.away_red_cards or 0) + len(card_infos[1].select('span[class="yellow_red_card"]'))
                         except Exception as e:
                             pass
+
         extra = soup.find('div', id='team_stats_extra')
         if extra:
             divs = extra.select('div')
