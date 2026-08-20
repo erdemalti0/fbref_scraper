@@ -15,13 +15,13 @@ def column_name_scraper(content) -> list:
     names = []
     try:
         for column in content.select('th[class*="poptip"]'):
-            col_name = column.text.strip()
+            col_name = column.text.strip().replace(" ", "_").lower()
             col_description = None
 
             try:
                 data_tip_content = column.get("data-tip", "")
                 match = re.search(r"<strong>(.*?)</strong>", data_tip_content)
-                column_description = match.group(1).strip() if match else None
+                column_description = match.group(1).strip().replace(" ", "_").lower() if match else None
 
                 col_description = column_description
             except Exception as e:
@@ -37,7 +37,7 @@ def column_name_scraper(content) -> list:
     except Exception as e:
         print(f"Kolon isimleri alınamadı")
     try:
-        if names[-1]["column_name"] == "Matches":
+        if names[-1]["column_name"] == "matches":
             names.pop(-1)
     except Exception as e:
         print(f"Matches error: {e}")

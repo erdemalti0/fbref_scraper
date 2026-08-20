@@ -11,6 +11,31 @@ from scrapers.match_report.match_player_stats_scraper import column_name_scraper
 from scrapers.match_report.match_player_stats_scraper import column_description_mapper
 from scrapers.match_report.match_player_stats_scraper import row_scraper
 
+def table_scraper(content, table_name, obj):
+    if content:
+        try:
+            column_names = column_name_scraper(content.select_one("thead").select("tr")[1])
+        except Exception as e:
+            column_names = None
+            print(f"Standard stats alınamadı {e}")
+
+        if column_names:
+            try:
+                rows = content.select_one("tbody").select("tr")
+                column_descriptions = column_description_mapper(column_names)
+                setattr(obj, table_name+"_col_descriptions", column_descriptions)
+            except Exception as e:
+                rows = None
+                print(e)
+
+            if rows:
+                try:
+                    result = row_scraper(rows, column_names)
+                    setattr(obj, table_name, result)
+                except Exception as e:
+                    print("Satır alınamadı")
+
+
 async def all_stats_scraper(page):
     stats = AllStats()
     try:
@@ -23,32 +48,37 @@ async def all_stats_scraper(page):
     soup = BeautifulSoup(html_content, "html.parser")
 
     standard_stats_html = soup.select_one('table[id="stats_standard_dom_lg"]')
+    shooting_table_html = soup.select_one('table[id="stats_shooting_dom_lg"]')
+    playing_time_table_html = soup.select_one('table[id="stats_playing_time_dom_lg"]')
+    miscellaneous_stats_table_html = soup.select_one('table[id="stats_misc_dom_lg"]')
+    summary_table_html = soup.select_one('table[id*="stats_player_summary_"]')
 
-    if standard_stats_html:
+    try:
+        table_scraper(standard_stats_html, "standard_stats", stats)
+    except Exception as e:
+        print(f"Tablo alınamadı {e}")
 
-        try:
-            standard_column_names = column_name_scraper(standard_stats_html.select_one("thead").select("tr")[1])
-        except Exception as e:
-            standard_column_names = None
-            print(f"Standard stats alınamadı {e}")
+    try:
+        table_scraper(shooting_table_html, "shooting_table", stats)
+    except Exception as e:
+        print(f"Tablo alınamadı {e}")
 
-        if standard_column_names:
-            try:
-                rows = standard_stats_html.select_one("tbody").select("tr")
-                column_descriptions = column_description_mapper(rows)
-                stats.standard_stats_col_descriptions = column_descriptions
-            except Exception as e:
-                rows = None
-                print(e)
+    try:
+        table_scraper(playing_time_table_html, "playing_time_table", stats)
+    except Exception as e:
+        print(f"Tablo alınamadı {e}")
 
-            if rows:
-                try:
-                    result = row_scraper(rows, standard_column_names)
-                    stats.standard_stats = result
-                except Exception as e:
-                    print("Satır alınamadı")
+    try:
+        table_scraper(miscellaneous_stats_table_html, "miscellaneous_stats_table", stats)
+    except Exception as e:
+        print(f"Tablo alınamadı {e}")
 
+    try:
+        table_scraper(summary_table_html, "summary_table", stats)
+    except Exception as e:
+        print(f"Tablo alınamadı {e}")
 
+    return stats
 
 async def main():
     browser = await start_browser(headless=False)
@@ -56,7 +86,7 @@ async def main():
         url = "https://fbref.com/en/players/e6af3cc7/Clarence-Seedorf"
 
         page = await browser.get(url)
-        await all_stats_scraper(page)
+        stats = await all_stats_scraper(page)
     finally:
         browser.stop()
 

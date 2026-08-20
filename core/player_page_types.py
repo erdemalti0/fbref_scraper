@@ -16,6 +16,6 @@ class PlayerInfo(BaseModel):
     player_weight: int | None = None
 
 
-class AllStats(BaseModel):
+class AllStats(BaseModel, extra="allow"):
     standard_stats: list[PlayerStats] | None = None
     standard_stats_col_descriptions: dict | None = None
