@@ -9,78 +9,8 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.match_report_types import PlayerStats, MatchPlayerStats
 from core.browser import start_browser
+from core.helper_functions import column_name_scraper, row_scraper, column_description_mapper
 
-def column_name_scraper(content) -> list:
-
-    names = []
-    try:
-        for column in content.select('th'):
-            col_name = column.text.strip().replace(" ", "_").lower()
-            if col_name == "" or not col_name:
-                col_name = "no_name_col"
-
-            col_description = None
-
-            try:
-                data_tip_content = column.get("data-tip", "")
-                match = re.search(r"<strong>(.*?)</strong>", data_tip_content)
-                column_description = match.group(1).strip().replace(" ", "_").lower() if match else None
-
-                col_description = column_description
-            except Exception as e:
-                print(f"Column description error: {e}")
-
-            col_obj = {
-                "column_name": col_name,
-                "column_description": col_description,
-            }
-
-            names.append(col_obj)
-
-    except Exception as e:
-        print(f"Kolon isimleri alınamadı")
-    try:
-        if names and names[-1]["column_name"] == "matches":
-            names.pop(-1)
-    except Exception as e:
-        print(f"Matches error: {e}")
-
-    return names
-
-def parse_cell_value(text: str):
-    """Boş hücre None, sayısal değerler int/float olarak döner."""
-    if not text:
-        return None
-    if text.isdigit():
-        return int(text)
-    try:
-        return float(text)
-    except ValueError:
-        return text
-
-def column_description_mapper(columns) -> dict[str, str]:
-    return {
-        col["column_name"].strip().lower(): col["column_description"]
-        for col in columns
-        if col["column_name"].strip() and col["column_description"]
-    }
-
-def row_scraper(content, columns) -> list[PlayerStats]:
-
-    result = []
-    for row in content:
-        stats = PlayerStats()
-        all_cels = row.find_all(["th", "td"])
-        for i, cel in enumerate(all_cels):
-            if i == len(columns):
-                break
-            var_name = columns[i]["column_name"].strip().lower()
-            if var_name:
-                setattr(stats, var_name, parse_cell_value(cel.text.strip()))
-
-        result.append(stats)
-
-    return result
 
 async def player_stats_scraper(page):
 
