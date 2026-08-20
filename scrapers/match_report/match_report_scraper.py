@@ -4,41 +4,41 @@ from pathlib import Path
 from datetime import datetime
 import nodriver as uc
 
-sys.path.append(str(Path(__file__).resolve().parent.parent))
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-from core.types import GeneralMatchInfo, GoalInfo
+from core.types import GeneralMatchInfo, GoalInfo, normalize_minute
 from core.browser import start_browser
 
 def goal_list_creator(content) -> list:
     goals_list = []
     for goal in content:
-        if goal.select_one("div[class='event_icon goal']"):
-            scorer = goal.select_one("a[href*='player']").text.strip()
-            if "(P)" in goal.text.strip():
-                is_penalty = True
-                is_own_goal = False
-                minute = goal.text.strip().split(" ")[-1]
-            elif "(OG)" in goal.text.strip():
-                is_penalty = False
-                is_own_goal = True
-                minute = goal.text.strip().split(" ")[-1]
-            else:
-                is_penalty = False
-                is_own_goal = False
-                minute = goal.text.strip().split(" ")[-1]
+        icon = goal.select_one("div[class*='event_icon']")
+        icon_class = " ".join(icon.get("class", [])) if icon else ""
 
-            goal_obj = GoalInfo(
-                scorer=scorer,
-                minute=minute,
-                is_penalty=is_penalty,
-                is_own_goal=is_own_goal,
-            )
+        # goal, own_goal ve penalty_goal ikonlarının hepsi gol sayılır
+        if "goal" not in icon_class:
+            continue
 
-            goals_list.append(goal_obj)
+        scorer_tag = goal.select_one("a[href*='player']")
+        scorer = scorer_tag.text.strip() if scorer_tag else None
+        text = goal.text.strip()
+
+        is_penalty = "(P)" in text
+        is_own_goal = "(OG)" in text or "own_goal" in icon_class
+        minute = normalize_minute(text.split(" ")[-1])
+
+        goal_obj = GoalInfo(
+            scorer=scorer,
+            minute=minute,
+            is_penalty=is_penalty,
+            is_own_goal=is_own_goal,
+        )
+
+        goals_list.append(goal_obj)
 
     return goals_list
 
-async def scrape_match_report(page ,url: str) -> GeneralMatchInfo:
+async def match_general_info_scraper(page ,url: str) -> GeneralMatchInfo:
 
     info_obj = GeneralMatchInfo()
 
@@ -85,7 +85,7 @@ async def scrape_match_report(page ,url: str) -> GeneralMatchInfo:
         smalls = scorebox_meta.select("small")
         for i, small in enumerate(smalls):
             if small.text.strip() == "Attendance":
-                info_obj.attendance = smalls[i+1].text.strip()
+                info_obj.attendance = int(smalls[i+1].text.strip().replace(",", ""))
                 break
     except Exception as e:
         print(f"Attendance alınamadı: {e}")
@@ -202,7 +202,7 @@ async def main():
     try:
         url = "https://fbref.com/en/matches/675b328b/Argentina-Cabo-Verde-July-3-2026-World-Cup"
         page = await browser.get(url)
-        result = await scrape_match_report(page, url)
+        result = await match_general_info_scraper(page, url)
         print(result)
     finally:
         browser.stop()

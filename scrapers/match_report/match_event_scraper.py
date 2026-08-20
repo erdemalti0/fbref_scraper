@@ -3,9 +3,9 @@ from bs4 import BeautifulSoup
 import nodriver as uc
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).resolve().parent.parent))
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-from core.types import Events, Substitution, CardEvent, GoalInfo, MissedPenalty
+from core.types import Events, Substitution, CardEvent, GoalInfo, MissedPenalty, normalize_minute
 from core.browser import start_browser
 
 def parse_event(event_div):
@@ -17,7 +17,7 @@ def parse_event(event_div):
     try:
         minute_div = event_div.select('div')[0]
         minute = "".join(minute_div.find_all(string=True, recursive=False)).strip()
-        minute = minute.replace("&nbsp9;", "").strip().replace("'", "")
+        minute = normalize_minute(minute.replace("&nbsp9;", ""))
     except Exception as e:
         minute = None
         print(f"Dakika bilgisi alınamadı {e}")
@@ -80,13 +80,13 @@ def parse_event(event_div):
 
     return None
 
-async def scrape_match_events(page, url):
+async def match_events_scraper(page):
 
     try:
         print("Scrapping events")
         await page.select('div[id="events_wrap"]')
     except Exception:
-        raise RuntimeError(f"Olaylar alınamadı {url}")
+        raise RuntimeError("Olaylar alınamadı")
 
     events = Events()
 
@@ -96,7 +96,7 @@ async def scrape_match_events(page, url):
     event_section = soup.select_one('div[id="events_wrap"]')
 
     if not event_section:
-        raise RuntimeError(f"Event alanı bulunamadı {url}")
+        raise RuntimeError("Event alanı bulunamadı")
 
     home_events_list = event_section.select('div[class="event a"]')
     away_events_list = event_section.select('div[class="event b"]')
@@ -134,7 +134,7 @@ async def main():
         url = "https://fbref.com/en/matches/675b328b/Argentina-Cabo-Verde-July-3-2026-World-Cup"
 
         page = await browser.get(url)
-        event_results = await scrape_match_events(page, url)
+        event_results = await match_events_scraper(page)
         print(event_results)
     finally:
         browser.stop()

@@ -3,11 +3,11 @@ from bs4 import BeautifulSoup
 import nodriver as uc
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).resolve().parent.parent))
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.types import TeamStats
 from core.browser import start_browser
-async def scrape_team_stats(page):
+async def team_stats_scrapper(page):
 
     try:
         print("Scrapping team stats")
@@ -146,7 +146,7 @@ async def main():
         url = "https://fbref.com/en/matches/9fd14983/Netherlands-Argentina-December-9-2022-World-Cup"
         page = await browser.get(url)
 
-        result = await scrape_team_stats(page)
+        result = await team_stats_scrapper(page)
         print(result)
     finally:
         browser.stop()

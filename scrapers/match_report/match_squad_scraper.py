@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from pathlib import Path
 import nodriver as uc
 
-sys.path.append(str(Path(__file__).resolve().parent.parent))
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.types import MatchSquad, PlayerInfo
 from core.browser import start_browser
@@ -50,22 +50,22 @@ def parse_squad(table_rows):
     return starting_eleven, bench
 
 
-async def scrape_match_squad(page, url: str) -> MatchSquad:
+async def match_squad_scraper(page) -> MatchSquad:
 
     squad_obj = MatchSquad()
 
     try:
         print("Scrapping Squad")
-        await page.wait_for('div[class="field_wrap"]')
+        await page.wait_for('div[class="lineup"]')
     except Exception:
-        raise RuntimeError(f"Kadrolar alınamadı {url}")
+        raise RuntimeError("Kadrolar alınamadı")
 
     html_content = await page.get_content()
     soup = BeautifulSoup(html_content, "html.parser")
 
     lineup_divs = soup.select('div[class="lineup"]')
     if not lineup_divs:
-        raise RuntimeError(f"Kadro alanı bulunamadı: {url}")
+        raise RuntimeError("Kadro alanı bulunamadı")
 
     # Home squad
     try:
@@ -125,7 +125,7 @@ async def main():
         url = "https://fbref.com/en/matches/91a56b43/Genclerbirligi-Fenerbahce-August-15-2026-Super-Lig"
 
         page = await browser.get(url)
-        squad = await scrape_match_squad(page, url)
+        squad = await match_squad_scraper(page)
         #print(squad)
     finally:
         browser.stop()

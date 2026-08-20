@@ -3,11 +3,20 @@ from datetime import datetime
 from typing import Literal
 
 
+def normalize_minute(minute: str | None) -> int | str | None:
+    if not minute:
+        return None
+    cleaned = minute.replace("’", "").replace("'", "").strip()
+    if cleaned.isdigit():
+        return int(cleaned)
+    return cleaned or None
+
+
 class GoalInfo(BaseModel):
     # General goal information
     scorer: str | None = None
     assist_provider: str | None = None
-    minute: str | None = None
+    minute: int | str | None = None
 
     # Goal type
     is_penalty: bool = False
@@ -19,23 +28,27 @@ class PlayerInfo(BaseModel):
 
 class CardEvent(BaseModel):
     player_name: str | None = None
-    minute: str | None = None
+    minute: int | str | None = None
     card_type: Literal["yellow_card", "red_card"] | None = None
     red_type: Literal["direct", "two_yellow"] | None = None
 
 class Substitution(BaseModel):
     player_in: str | None = None
     player_out: str | None = None
-    minute: str | None = None
+    minute: int | str | None = None
 
 class MissedPenalty(BaseModel):
     player_name: str | None = None
-    minute: str | None = None
+    minute: int | str | None = None
 
 class PlayerStats(BaseModel, extra="allow"):
     player: str | None = None
 
 class MatchPlayerStats(BaseModel):
+    # Kolon açıklamaları maçtan maça değişebildiği için tablo başına bir kez tutulur
+    column_descriptions: dict[str, str] | None = None
+    goalkeeper_column_descriptions: dict[str, str] | None = None
+
     home_stats: list[PlayerStats] | None = None
     away_stats: list[PlayerStats] | None = None
 
@@ -101,7 +114,7 @@ class GeneralMatchInfo(BaseModel):
     league: str | None = None
     venue: str | None = None
     match_date: datetime | None = None
-    attendance: str | None = None
+    attendance: int | None = None
 
     # Team information
     home_name: str | None = None
@@ -123,3 +136,10 @@ class GeneralMatchInfo(BaseModel):
     # Goalscorers info
     home_goal_scorers: list[GoalInfo] | None = None
     away_goal_scorers: list[GoalInfo] | None = None
+
+class MatchReport(BaseModel):
+    general_info: GeneralMatchInfo | None = None
+    team_stats: TeamStats | None = None
+    events: Events | None = None
+    squad: MatchSquad | None = None
+    player_stats: MatchPlayerStats | None = None
