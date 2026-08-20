@@ -1,4 +1,4 @@
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Literal
 
@@ -41,8 +41,8 @@ class MissedPenalty(BaseModel):
     player_name: str | None = None
     minute: int | str | None = None
 
-class PlayerStats(BaseModel, extra="allow"):
-    player: str | None = None
+class PlayerStats(BaseModel):
+    model_config = ConfigDict(extra="allow")
 
 class MatchPlayerStats(BaseModel):
     # Kolon açıklamaları maçtan maça değişebildiği için tablo başına bir kez tutulur

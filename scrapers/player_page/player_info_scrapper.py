@@ -9,7 +9,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from core.player_page_types import PlayerInfo
 from core.browser import start_browser
 
-async def player_info_scraper(page, url) -> PlayerInfo:
+async def player_info_scraper(page, url) -> PlayerInfo | None:
     player_obj = PlayerInfo()
 
     try:

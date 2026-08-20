@@ -14,8 +14,11 @@ def column_name_scraper(content) -> list:
 
     names = []
     try:
-        for column in content.select('th[class*="poptip"]'):
+        for column in content.select('th'):
             col_name = column.text.strip().replace(" ", "_").lower()
+            if col_name == "" or not col_name:
+                col_name = "no_name_col"
+
             col_description = None
 
             try:
@@ -37,7 +40,7 @@ def column_name_scraper(content) -> list:
     except Exception as e:
         print(f"Kolon isimleri alınamadı")
     try:
-        if names[-1]["column_name"] == "matches":
+        if names and names[-1]["column_name"] == "matches":
             names.pop(-1)
     except Exception as e:
         print(f"Matches error: {e}")
@@ -98,32 +101,41 @@ async def player_stats_scraper(page):
         home_table = tables[0]
         away_table = tables[1]
 
-        column_names = column_name_scraper(home_table)
-        match_player_stats.column_descriptions = column_description_mapper(column_names)
-        try:
-            home_rows = home_table.select_one("tbody").select('tr')
-            away_rows = away_table.select_one("tbody").select("tr")
+        tr_in_col_names = home_table.select_one("thead").select("tr")[1]
 
-            match_player_stats.home_stats = row_scraper(home_rows, column_names)
-            match_player_stats.away_stats = row_scraper(away_rows, column_names)
-        except Exception as e:
-            print(e)
+        if tr_in_col_names:
+            column_names = column_name_scraper(tr_in_col_names)
+
+            match_player_stats.column_descriptions = column_description_mapper(column_names)
+            try:
+                home_rows = home_table.select_one("tbody").select('tr')
+                away_rows = away_table.select_one("tbody").select("tr")
+
+                match_player_stats.home_stats = row_scraper(home_rows, column_names)
+                match_player_stats.away_stats = row_scraper(away_rows, column_names)
+            except Exception as e:
+                print(e)
 
 
     if goalkeeper_tables:
         home_goalkeeper_table = goalkeeper_tables[0]
         away_goalkeeper_table = goalkeeper_tables[1]
 
-        column_names = column_name_scraper(home_goalkeeper_table)
-        match_player_stats.goalkeeper_column_descriptions = column_description_mapper(column_names)
-        try:
-            home_rows = home_goalkeeper_table.select_one("tbody").select('tr')
-            away_rows = away_goalkeeper_table.select_one("tbody").select("tr")
+        tr_in_col_names = home_goalkeeper_table.select_one("thead").select("tr")[1]
 
-            match_player_stats.home_goalkeeper_stats = row_scraper(home_rows, column_names)
-            match_player_stats.away_goalkeeper_stats = row_scraper(away_rows, column_names)
-        except Exception as e:
-            print(e)
+        if tr_in_col_names:
+            column_names = column_name_scraper(tr_in_col_names)
+            match_player_stats.goalkeeper_column_descriptions = column_description_mapper(column_names)
+            try:
+                home_rows = home_goalkeeper_table.select_one("tbody").select('tr')
+                away_rows = away_goalkeeper_table.select_one("tbody").select("tr")
+
+                match_player_stats.home_goalkeeper_stats = row_scraper(home_rows, column_names)
+                match_player_stats.away_goalkeeper_stats = row_scraper(away_rows, column_names)
+            except Exception as e:
+                print(e)
+        else:
+            print("Kalece tabloları alınamadı")
 
 
     return match_player_stats

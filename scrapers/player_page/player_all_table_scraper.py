@@ -35,6 +35,38 @@ def table_scraper(content, table_name, obj):
                 except Exception as e:
                     print("Satır alınamadı")
 
+        tfoot_html = content.select_one("tfoot")
+        trs = tfoot_html.select("tr")
+
+        if len(trs) > 1:
+            trs = trs[1::]
+
+            temp = []
+            for tr in trs:
+                if tr.get("class", "") == ["spacer", "partial_table"]:
+                    continue
+                temp.append(tr)
+
+            trs = temp
+            try:
+                column_names = column_name_scraper(trs[0])
+            except Exception as e:
+                column_names = None
+                pass
+            if column_names:
+                try:
+                    rows = trs[1::]
+                except Exception as e:
+                    rows = None
+                    print(f"Satırlar alınamadı {e}")
+
+                if rows:
+                    try:
+                        result = row_scraper(rows, column_names)
+                        setattr(obj, table_name+"_by_club_and_league", result)
+                    except Exception as e:
+                        print("Tablo alınamadı")
+
 
 async def all_stats_scraper(page):
     stats = AllStats()

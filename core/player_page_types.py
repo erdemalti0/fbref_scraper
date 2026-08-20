@@ -1,7 +1,8 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Literal
 from datetime import datetime
 from core.match_report_types import PlayerStats
+
 
 class PlayerInfo(BaseModel):
     player_id: str | None = None
@@ -16,6 +17,9 @@ class PlayerInfo(BaseModel):
     player_weight: int | None = None
 
 
-class AllStats(BaseModel, extra="allow"):
-    standard_stats: list[PlayerStats] | None = None
-    standard_stats_col_descriptions: dict | None = None
+class AllStats(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+class PlayerPage(BaseModel):
+    info: PlayerInfo | None = None
+    all_stats: AllStats | None = None
