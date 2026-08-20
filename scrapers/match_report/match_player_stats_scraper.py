@@ -36,6 +36,11 @@ def column_name_scraper(content) -> list:
 
     except Exception as e:
         print(f"Kolon isimleri alınamadı")
+    try:
+        if names[-1]["column_name"] == "Matches":
+            names.pop(-1)
+    except Exception as e:
+        print(f"Matches error: {e}")
 
     return names
 
@@ -64,6 +69,8 @@ def row_scraper(content, columns) -> list[PlayerStats]:
         stats = PlayerStats()
         all_cels = row.find_all(["th", "td"])
         for i, cel in enumerate(all_cels):
+            if i == len(columns):
+                break
             var_name = columns[i]["column_name"].strip().lower()
             if var_name:
                 setattr(stats, var_name, parse_cell_value(cel.text.strip()))

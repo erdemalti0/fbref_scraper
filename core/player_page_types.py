@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Literal
 from datetime import datetime
+from core.match_report_types import PlayerStats
 
 class PlayerInfo(BaseModel):
     player_id: str | None = None
@@ -14,8 +15,7 @@ class PlayerInfo(BaseModel):
     player_height: int | None = None
     player_weight: int | None = None
 
-class Season(BaseModel, extra="allow"):
-    season: str | None = None
 
-class StandardStats(BaseModel):
-    seasons: list[Season] | None = None
+class AllStats(BaseModel):
+    standard_stats: list[PlayerStats] | None = None
+    standard_stats_col_descriptions: dict | None = None
