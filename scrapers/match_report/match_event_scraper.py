@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-from core.types import Events, Substitution, CardEvent, GoalInfo, MissedPenalty, normalize_minute
+from core.match_report_types import Events, Substitution, CardEvent, GoalInfo, MissedPenalty, normalize_minute
 from core.browser import start_browser
 
 def parse_event(event_div):

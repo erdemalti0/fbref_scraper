@@ -8,7 +8,7 @@ import nodriver as uc
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.browser import start_browser
-from core.types import MatchReport
+from core.match_report_types import MatchReport
 from scrapers.match_report.match_report_scraper import match_general_info_scraper
 from scrapers.match_report.match_team_stats_scraper import team_stats_scrapper
 from scrapers.match_report.match_event_scraper import match_events_scraper

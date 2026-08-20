@@ -6,7 +6,7 @@ import nodriver as uc
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-from core.types import GeneralMatchInfo, GoalInfo, normalize_minute
+from core.match_report_types import GeneralMatchInfo, GoalInfo, normalize_minute
 from core.browser import start_browser
 
 def goal_list_creator(content) -> list:

@@ -7,7 +7,7 @@ import re
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-from core.types import PlayerStats, MatchPlayerStats
+from core.match_report_types import PlayerStats, MatchPlayerStats
 from core.browser import start_browser
 
 def column_name_scraper(content) -> list:

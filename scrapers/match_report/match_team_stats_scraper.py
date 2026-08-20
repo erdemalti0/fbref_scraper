@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-from core.types import TeamStats
+from core.match_report_types import TeamStats
 from core.browser import start_browser
 async def team_stats_scrapper(page):
 

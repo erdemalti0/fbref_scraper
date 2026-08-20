@@ -5,7 +5,7 @@ import nodriver as uc
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-from core.types import MatchSquad, PlayerInfo
+from core.match_report_types import MatchSquad, PlayerInfo
 from core.browser import start_browser
 
 def parse_squad(table_rows):
