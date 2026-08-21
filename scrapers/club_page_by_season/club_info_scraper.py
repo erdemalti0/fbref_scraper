@@ -8,7 +8,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from core.browser import start_browser
 from core.club_page_by_season_types import ClubInfo
 
-async def club_info_scraper(page):
+async def club_info_scraper(page, url):
     club = ClubInfo()
     try:
         print("Kulüp bilgileri alınıyor")
@@ -18,6 +18,12 @@ async def club_info_scraper(page):
 
     html_content = await page.get_content()
     soup = BeautifulSoup(html_content, 'html.parser')
+
+    try:
+        club.club_id = url.split("/")[5]
+    except Exception as e:
+        print(f"match_id alınamadı: {e}")
+        club.club_id.match_id = None
 
     info = soup.select_one('div[data-template="Partials/Teams/Summary"]')
     if info:

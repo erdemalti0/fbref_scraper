@@ -24,5 +24,5 @@ class ClubInfo(BaseModel):
 
 class ClubPageBySeason(BaseModel):
     ConfigDict(extra="allow")
-    club_info: CompetitionUrl | None = None
+    club_info: ClubInfo | None = None
     competitions: list[ClubCompetition] | None = None

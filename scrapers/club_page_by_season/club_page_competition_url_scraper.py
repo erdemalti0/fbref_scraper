@@ -28,9 +28,12 @@ async def competition_url_scraper(page, url) -> list[CompetitionUrl] | None :
             for div in divs:
                 a = div.select_one('a')
                 if a and a.get('href'):
+                    aurl = a.get('href').strip()
+                    if not aurl.startswith('https://fbref.com'):
+                        aurl = "https://fbref.com" + aurl
                     obj = CompetitionUrl(
                         competition_name=a.text.strip(),
-                        competition_url=a.get('href').strip(),
+                        competition_url=aurl,
                     )
                 else:
                     obj = CompetitionUrl(
@@ -49,7 +52,7 @@ async def main():
     url = "https://fbref.com/en/squads/18bb7c10/2025-2026/Arsenal-Stats"
     try:
         page = await browser.get(url)
-        await competition_scraper(page, url)
+        await competition_url_scraper(page, url)
     except Exception as e:
         print(f"Turnuva bilgisi alınamadı")
         browser.stop()

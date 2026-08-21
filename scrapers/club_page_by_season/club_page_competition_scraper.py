@@ -11,7 +11,7 @@ from core.helper_functions import column_name_scraper, table_scraper
 from core.club_page_by_season_types import ClubCompetition, CompetitionUrl, ScoringAndFixture
 
 
-async def competitin_scrapper(page, competition_name) -> ClubCompetition | None:
+async def competition_scrapper(page, competition_name) -> ClubCompetition | None:
     club = ClubCompetition(
         competition_name=competition_name,
     )
@@ -78,7 +78,7 @@ async def main() -> None:
     try:
         page = await browser.get(url)
         await asyncio.sleep(3)
-        await competitin_scrapper(page, "ucl")
+        await competition_scrapper(page, "ucl")
     finally:
         browser.stop()
 
