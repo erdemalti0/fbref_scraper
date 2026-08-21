@@ -1,6 +1,8 @@
 from bs4 import BeautifulSoup
 from core.player_page_types import *
 from core.match_report_types import *
+from core.club_page_by_season_types import *
+from typing import Literal
 import re
 
 def parse_cell_value(text: str):
@@ -22,6 +24,9 @@ def column_name_scraper(content) -> list:
             if col_name == "" or not col_name:
                 col_name = "no_name_col"
 
+            if col_name == "matches" or col_name == "match_report" or col_name == "match":
+                continue
+
             col_description = None
 
             try:
@@ -42,11 +47,6 @@ def column_name_scraper(content) -> list:
 
     except Exception as e:
         print(f"Kolon isimleri alınamadı")
-    try:
-        if names and names[-1]["column_name"] == "matches":
-            names.pop(-1)
-    except Exception as e:
-        print(f"Matches error: {e}")
 
     return names
 
@@ -67,6 +67,23 @@ def row_scraper(content, columns) -> list[PlayerStats]:
 
     return result
 
+def fixture_row_scraper(content, columns) -> list[FixtureRow]:
+
+    result = []
+    for row in content:
+        stats = FixtureRow()
+        all_cels = row.find_all(["th", "td"])
+        for i, cel in enumerate(all_cels):
+            if i == len(columns):
+                break
+            var_name = columns[i]["column_name"].strip().lower()
+            if var_name:
+                setattr(stats, var_name, parse_cell_value(cel.text.strip()))
+
+        result.append(stats)
+
+    return result
+
 def column_description_mapper(columns) -> dict[str, str]:
     return {
         col["column_name"].strip().lower(): col["column_description"]
@@ -74,10 +91,14 @@ def column_description_mapper(columns) -> dict[str, str]:
         if col["column_name"].strip() and col["column_description"]
     }
 
-def table_scraper(content, table_name, obj):
+def table_scraper(content, table_name, obj, return_type: Literal["player", "fixture"] = "player"):
     if content:
         try:
-            column_names = column_name_scraper(content.select_one("thead").select("tr")[1])
+            cols = content.select_one("thead").select("tr")
+            if len(cols) == 1:
+                column_names = column_name_scraper(cols[0])
+            else:
+                column_names = column_name_scraper(cols[-1])
         except Exception as e:
             column_names = None
             print(f"Standard stats alınamadı {e}")
@@ -93,15 +114,23 @@ def table_scraper(content, table_name, obj):
 
             if rows:
                 try:
-                    result = row_scraper(rows, column_names)
+                    if return_type.lower() == "player":
+                        result = row_scraper(rows, column_names)
+                    elif return_type.lower() == "fixture":
+                        result = fixture_row_scraper(rows, column_names)
+
                     setattr(obj, table_name, result)
                 except Exception as e:
-                    print("Satır alınamadı")
+                    print(f"Satır alınamadı {e}")
 
         tfoot_html = content.select_one("tfoot")
-        trs = tfoot_html.select("tr")
+        if tfoot_html:
+            trs = tfoot_html.select("tr")
+        else:
+            return
 
-        if len(trs) > 1:
+
+        if len(trs) > 2:
             trs = trs[1::]
 
             temp = []
