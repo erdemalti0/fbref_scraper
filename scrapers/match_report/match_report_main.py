@@ -1,5 +1,4 @@
 import asyncio
-import json
 import sys
 from pathlib import Path
 
@@ -8,9 +7,10 @@ import nodriver as uc
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.browser import start_browser
+from core.storage import save_json
 from core.match_report_types import MatchReport
 from scrapers.match_report.match_report_scraper import match_general_info_scraper
-from scrapers.match_report.match_team_stats_scraper import team_stats_scrapper
+from scrapers.match_report.match_team_stats_scraper import team_stats_scraper
 from scrapers.match_report.match_event_scraper import match_events_scraper
 from scrapers.match_report.match_squad_scraper import match_squad_scraper
 from scrapers.match_report.match_player_stats_scraper import player_stats_scraper
@@ -28,7 +28,7 @@ async def scrape_page(page, url: str) -> MatchReport:
 
     scrapers = [
         ("general_info", match_general_info_scraper(page, url)),
-        ("team_stats", team_stats_scrapper(page)),
+        ("team_stats", team_stats_scraper(page)),
         ("events", match_events_scraper(page)),
         ("squad", match_squad_scraper(page)),
         ("player_stats", player_stats_scraper(page)),
@@ -45,18 +45,7 @@ async def scrape_page(page, url: str) -> MatchReport:
 
 def save_report(report: MatchReport) -> Path | None:
     match_id = report.general_info.match_id if report.general_info else None
-    if not match_id:
-        print("match_id bulunamadı, rapor kaydedilmedi")
-        return None
-
-    STORAGE_DIR.mkdir(exist_ok=True)
-    path = STORAGE_DIR / f"{match_id}.json"
-    path.write_text(
-        json.dumps(report.model_dump(mode="json"), ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-    print(f"Rapor kaydedildi: {path}")
-    return path
+    return save_json(report, STORAGE_DIR, match_id, "match")
 
 
 async def scrape_match_report(url: str, headless: bool = False) -> MatchReport:

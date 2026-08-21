@@ -84,36 +84,20 @@ async def match_general_info_scraper(page ,url: str) -> GeneralMatchInfo:
     try:
         smalls = scorebox_meta.select("small")
         for i, small in enumerate(smalls):
-            if small.text.strip() == "Attendance":
-                info_obj.attendance = int(smalls[i+1].text.strip().replace(",", ""))
-                break
+            label = small.text.strip()
+            try:
+                if label == "Attendance":
+                    info_obj.attendance = int(smalls[i+1].text.strip().replace(",", ""))
+                elif label == "Venue":
+                    info_obj.venue = smalls[i+1].text.strip()
+                elif label == "Officials":
+                    spans = smalls[i+1].select("span")
+                    if spans:
+                        info_obj.referee = spans[0].text.strip().replace("\xa0", " ").replace("(Referee)", "").strip()
+            except Exception as e:
+                print(f"{label} alınamadı: {e}")
     except Exception as e:
-        print(f"Attendance alınamadı: {e}")
-        info_obj.attendance = None
-
-    # Place information in smalls
-    try:
-        smalls = scorebox_meta.select("small")
-        for i, small in enumerate(smalls):
-            if small.text.strip() == "Venue":
-                info_obj.venue = smalls[i+1].text.strip()
-                break
-    except Exception as e:
-        print(f"venue alınamadı: {e}")
-        info_obj.venue = None
-
-    # Referee information in smalls
-    try:
-        smalls = scorebox_meta.select("small")
-        for i, small in enumerate(smalls):
-            if small.text.strip() == "Officials":
-                spans = smalls[i+1].select("span")
-                if spans:
-                    info_obj.referee = spans[0].text.strip().replace("\xa0", " ")
-                break
-    except Exception as e:
-        print(f"referee alınamadı: {e}")
-        info_obj.referee = None
+        print(f"Scorebox meta bilgileri alınamadı: {e}")
 
     home_team_html = scorebox.find('div', id='sb_team_0')
     away_team_html = scorebox.find('div', id='sb_team_1')

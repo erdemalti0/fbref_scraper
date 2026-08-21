@@ -3,7 +3,6 @@ import sys
 from bs4 import BeautifulSoup
 import nodriver as uc
 from pathlib import Path
-import re
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
@@ -18,7 +17,7 @@ async def player_stats_scraper(page):
 
     try:
         print("Scraping player stats")
-        await page.select('table[class="stats_table sortable now_sortable"')
+        await page.select('table[class="stats_table sortable now_sortable"]')
     except Exception as e:
         raise RuntimeError(f"Oyuncu istatistik tablosu alınamadı {e}")
 

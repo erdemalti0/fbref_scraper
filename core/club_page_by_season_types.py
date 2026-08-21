@@ -1,15 +1,12 @@
 from pydantic import BaseModel, ConfigDict
 
-class FixtureRow(BaseModel, extra="allow"):
-    ConfigDict(extra="allow")
+class FixtureRow(BaseModel):
+    model_config = ConfigDict(extra="allow")
 
-class ScoringAndFixture(BaseModel):
-    ConfigDict(extra="allow")
-
-class ClubCompetition(BaseModel, extra="allow"):
-    ConfigDict(extra="allow")
+class ClubCompetition(BaseModel):
+    model_config = ConfigDict(extra="allow")
     competition_name: str | None = None
-    scoring_and_fixture: ScoringAndFixture | None = None
+    scoring_and_fixture: list[FixtureRow] | None = None
 
 
 class CompetitionUrl(BaseModel):
@@ -23,6 +20,6 @@ class ClubInfo(BaseModel):
     season: str | None = None
 
 class ClubPageBySeason(BaseModel):
-    ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow")
     club_info: ClubInfo | None = None
     competitions: list[ClubCompetition] | None = None

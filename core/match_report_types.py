@@ -59,8 +59,8 @@ class TeamStats(BaseModel):
     home_name: str | None = None
     away_name: str | None = None
 
-    home_possession: str | None = None
-    away_possession: str | None = None
+    home_possession: float | None = None
+    away_possession: float | None = None
 
     home_shots: int | None = None
     away_shots: int | None = None

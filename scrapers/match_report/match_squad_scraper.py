@@ -50,6 +50,13 @@ def parse_squad(table_rows):
     return starting_eleven, bench
 
 
+def parse_lineup(lineup_div) -> tuple[str, list[PlayerInfo], list[PlayerInfo]]:
+    table = lineup_div.select("tbody")[0].select("tr")
+    formation = table[0].select_one("th").text.split(" ")[-1].lstrip("(").rsplit(")")[0]
+    starting_eleven, bench = parse_squad(table[1::])
+    return formation, starting_eleven, bench
+
+
 async def match_squad_scraper(page) -> MatchSquad:
 
     squad_obj = MatchSquad()
@@ -69,53 +76,15 @@ async def match_squad_scraper(page) -> MatchSquad:
 
     # Home squad
     try:
-        home_squad_table = lineup_divs[0].select("tbody")
-        home_table = home_squad_table[0].select("tr")
+        squad_obj.home_formation, squad_obj.home_starting_eleven, squad_obj.home_bench = parse_lineup(lineup_divs[0])
     except Exception as e:
-        print(f"home kadro tablosu alınamadı: {e}")
-        home_table = []
-
-    # Home formation
-    try:
-        squad_obj.home_formation = home_table[0].select_one("th").text.split(" ")[-1].lstrip("(").rsplit(")")[0]
-    except Exception as e:
-        print(f"home_formation alınamadı: {e}")
-        squad_obj.home_formation = None
-
-    # Home starting eleven and bench
-    try:
-        home_starting_eleven, home_bench = parse_squad(home_table[1::])
-        squad_obj.home_starting_eleven = home_starting_eleven
-        squad_obj.home_bench = home_bench
-    except Exception as e:
-        print(f"home ilk 11 / yedekler alınamadı: {e}")
-        squad_obj.home_starting_eleven = None
-        squad_obj.home_bench = None
+        print(f"home kadro alınamadı: {e}")
 
     # Away squad
     try:
-        away_squad_table = lineup_divs[1].select("tbody")
-        away_table = away_squad_table[0].select("tr")
+        squad_obj.away_formation, squad_obj.away_starting_eleven, squad_obj.away_bench = parse_lineup(lineup_divs[1])
     except Exception as e:
-        print(f"away kadro tablosu alınamadı: {e}")
-        away_table = []
-
-    # Away formation
-    try:
-        squad_obj.away_formation = away_table[0].select_one("th").text.split(" ")[-1].lstrip("(").rsplit(")")[0]
-    except Exception as e:
-        print(f"away_formation alınamadı: {e}")
-        squad_obj.away_formation = None
-
-    # Away starting eleven and bench
-    try:
-        away_starting_eleven, away_bench = parse_squad(away_table[1::])
-        squad_obj.away_starting_eleven = away_starting_eleven
-        squad_obj.away_bench = away_bench
-    except Exception as e:
-        print(f"away ilk 11 / yedekler alınamadı: {e}")
-        squad_obj.away_starting_eleven = None
-        squad_obj.away_bench = None
+        print(f"away kadro alınamadı: {e}")
 
     return squad_obj
 

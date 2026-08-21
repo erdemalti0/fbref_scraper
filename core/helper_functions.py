@@ -1,4 +1,3 @@
-from bs4 import BeautifulSoup
 from core.player_page_types import *
 from core.match_report_types import *
 from core.club_page_by_season_types import *
@@ -25,6 +24,10 @@ def column_name_scraper(content) -> list:
                 col_name = "no_name_col"
 
             if col_name == "matches" or col_name == "match_report" or col_name == "match":
+                names.append({
+                    "column_name": "",
+                    "column_description": None,
+                })
                 continue
 
             col_description = None
@@ -50,29 +53,15 @@ def column_name_scraper(content) -> list:
 
     return names
 
-def row_scraper(content, columns) -> list[PlayerStats]:
+def row_scraper(content, columns, model_cls=PlayerStats) -> list:
 
     result = []
+    first_col_name = columns[0]["column_name"].strip().lower() if columns else ""
     for row in content:
-        stats = PlayerStats()
         all_cels = row.find_all(["th", "td"])
-        for i, cel in enumerate(all_cels):
-            if i == len(columns):
-                break
-            var_name = columns[i]["column_name"].strip().lower()
-            if var_name:
-                setattr(stats, var_name, parse_cell_value(cel.text.strip()))
-
-        result.append(stats)
-
-    return result
-
-def fixture_row_scraper(content, columns) -> list[FixtureRow]:
-
-    result = []
-    for row in content:
-        stats = FixtureRow()
-        all_cels = row.find_all(["th", "td"])
+        if first_col_name and all_cels and all_cels[0].text.strip().lower() == first_col_name:
+            continue
+        stats = model_cls()
         for i, cel in enumerate(all_cels):
             if i == len(columns):
                 break
@@ -115,9 +104,9 @@ def table_scraper(content, table_name, obj, return_type: Literal["player", "fixt
             if rows:
                 try:
                     if return_type.lower() == "player":
-                        result = row_scraper(rows, column_names)
+                        result = row_scraper(rows, column_names, PlayerStats)
                     elif return_type.lower() == "fixture":
-                        result = fixture_row_scraper(rows, column_names)
+                        result = row_scraper(rows, column_names, FixtureRow)
 
                     setattr(obj, table_name, result)
                 except Exception as e:

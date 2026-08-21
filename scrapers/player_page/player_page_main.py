@@ -1,17 +1,14 @@
-import asyncio
-import json
 import sys
 from pathlib import Path
 
 import nodriver as uc
 
-from scrapers.player_page import player_info_scrapper
-
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.browser import start_browser
+from core.storage import save_json
 from core.player_page_types import PlayerPage
-from scrapers.player_page.player_info_scrapper import player_info_scraper
+from scrapers.player_page.player_info_scraper import player_info_scraper
 from scrapers.player_page.player_all_table_scraper import all_stats_scraper
 
 STORAGE_DIR = Path(__file__).resolve().parent.parent.parent / "storage/players"
@@ -39,21 +36,10 @@ async def scrape_page(page, url):
     return player
 
 def save_report(player: PlayerPage) -> Path | None:
-    player_id = player.info.player_id if player.info.player_id else None
-    if not player_id:
-        print("match_id bulunamadı, rapor kaydedilmedi")
-        return None
+    player_id = player.info.player_id if player.info and player.info.player_id else None
+    return save_json(player, STORAGE_DIR, player_id, "player")
 
-    STORAGE_DIR.mkdir(exist_ok=True)
-    path = STORAGE_DIR / f"{player_id}.json"
-    path.write_text(
-        json.dumps(player.model_dump(mode="json"), ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-    print(f"Rapor kaydedildi: {path}")
-    return path
-
-async def scrape_match_report(url: str, headless: bool = False) -> PlayerPage:
+async def scrape_player_page(url: str, headless: bool = False) -> PlayerPage:
     browser = await start_browser(headless=headless)
     try:
         page = await browser.get(url)
@@ -65,7 +51,7 @@ async def scrape_match_report(url: str, headless: bool = False) -> PlayerPage:
 
 async def main():
     url = "https://fbref.com/en/players/e6af3cc7/Clarence-Seedorf"
-    player = await scrape_match_report(url, headless=False)
+    player = await scrape_player_page(url, headless=False)
     print(player)
 
 

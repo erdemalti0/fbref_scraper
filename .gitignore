@@ -1,3 +1,6 @@
 .venv
-scrappers/downloaded_files
-storage
+__pycache__/
+*.pyc
+.idea/
+downloaded_files/
+storage/

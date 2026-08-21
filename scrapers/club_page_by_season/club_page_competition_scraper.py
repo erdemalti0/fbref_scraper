@@ -8,17 +8,21 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.browser import start_browser
 from core.helper_functions import column_name_scraper, table_scraper
-from core.club_page_by_season_types import ClubCompetition, CompetitionUrl, ScoringAndFixture
+from core.club_page_by_season_types import ClubCompetition
 
 
-async def competition_scrapper(page, competition_name) -> ClubCompetition | None:
+def comp_matches(row_comp, competition_name) -> bool:
+    return str(row_comp).strip().lower().split(" ")[0] == competition_name.strip().lower().split(" ")[0]
+
+
+async def competition_scraper(page, competition_name) -> ClubCompetition | None:
     club = ClubCompetition(
         competition_name=competition_name,
     )
 
     try:
         print("Turnuva bilgisi alınıyor")
-        await page.wait_for('table[id="stats_misc_8"]')
+        await page.wait_for('table[id*="stats_misc_"]')
     except Exception as e:
         print(f"Hata {e}")
 
@@ -34,7 +38,15 @@ async def competition_scrapper(page, competition_name) -> ClubCompetition | None
             column_names = None
             print(f"Kolon isimleri alınamadı {e}")
 
-    standard_stats_html = soup.select_one('table[id="stats_standard_8"]')
+    if club.scoring_and_fixture and competition_name != "All Competitions":
+        filtered_rows = [
+            row for row in club.scoring_and_fixture
+            if getattr(row, "comp", None) is None or comp_matches(row.comp, competition_name)
+        ]
+        if filtered_rows:
+            club.scoring_and_fixture = filtered_rows
+
+    standard_stats_html = soup.select_one('table[id*="stats_standard_"]')
     if standard_stats_html:
         try:
             table_scraper(standard_stats_html, "standard_stats", club)
@@ -42,28 +54,28 @@ async def competition_scrapper(page, competition_name) -> ClubCompetition | None
             column_names = None
             print(f"Kolon isimleri alınamadı")
 
-    goalkeeping_stats_html = soup.select_one('table[id="stats_keeper_8"]')
+    goalkeeping_stats_html = soup.select_one('table[id*="stats_keeper_"]')
     if goalkeeping_stats_html:
         try:
             table_scraper(goalkeeping_stats_html, "goalkeeping_stats", club)
         except Exception as e:
             print(f"Kolon isimleri alınamadı")
 
-    shooting_stats_html = soup.select_one('table[id="stats_shooting_8"]')
+    shooting_stats_html = soup.select_one('table[id*="stats_shooting_"]')
     if shooting_stats_html:
         try:
             table_scraper(shooting_stats_html, "shooting_stats", club)
         except Exception as e:
             print(f"Kolon isimleri alınamadı")
 
-    playing_time_stats_html = soup.select_one('table[id="stats_playing_time_8"]')
+    playing_time_stats_html = soup.select_one('table[id*="stats_playing_time_"]')
     if playing_time_stats_html:
         try:
             table_scraper(playing_time_stats_html, "playing_time", club)
         except Exception as e:
             print(f"Kolon isimleri alınamadı")
 
-    miscellaneous_stats_html = soup.select_one('table[id="stats_misc_8"]')
+    miscellaneous_stats_html = soup.select_one('table[id*="stats_misc_"]')
     if miscellaneous_stats_html:
         try:
             table_scraper(miscellaneous_stats_html, "miscellaneous_stats", club)

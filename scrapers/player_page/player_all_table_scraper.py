@@ -7,7 +7,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.player_page_types import AllStats
 from core.browser import start_browser
-from core.helper_functions import column_description_mapper, column_name_scraper, row_scraper, table_scraper
+from core.helper_functions import table_scraper
 
 async def all_stats_scraper(page):
     stats = AllStats()

@@ -38,7 +38,7 @@ async def competition_url_scraper(page, url) -> list[CompetitionUrl] | None :
                 else:
                     obj = CompetitionUrl(
                         competition_name=div.text.strip(),
-                        competition_url=url
+                        competition_url=None
                     )
 
                 result.append(obj)

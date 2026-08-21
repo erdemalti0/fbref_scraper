@@ -7,7 +7,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.match_report_types import TeamStats
 from core.browser import start_browser
-async def team_stats_scrapper(page):
+async def team_stats_scraper(page):
 
     try:
         print("Scrapping team stats")
@@ -34,17 +34,22 @@ async def team_stats_scrapper(page):
         else:
             print("Takım adları bulunamadı")
 
-        if rows[2]:
+        if len(rows) > 2:
             possesion_infos = rows[2].select("strong")
             try:
-                stats.home_possession = possesion_infos[0].text.strip() if possesion_infos else None
-                stats.away_possession = possesion_infos[1].text.strip() if possesion_infos else None
+                home_possession = int(possesion_infos[0].text.strip().replace("%", ""))
+                away_possession = int(possesion_infos[1].text.strip().replace("%", ""))
+                if home_possession + away_possession == 101:
+                    home_possession = home_possession - 0.5
+                    away_possession = away_possession - 0.5
+                stats.home_possession = float(home_possession)
+                stats.away_possession = float(away_possession)
             except Exception as e:
                 print(f"Topla oynama bilgileri alınamadı {e}")
         else:
             print("Topla oynama bilgileri bulunamadı")
 
-        if rows[4]:
+        if len(rows) > 4:
             shot_infos = rows[4].select("td")
             if shot_infos:
                 parsed_home_shots = shot_infos[0].text.replace("\xa0", "").replace("\n", "").replace("—", " ").split(" ")
@@ -66,7 +71,7 @@ async def team_stats_scrapper(page):
                     except Exception as e:
                         print(f"Deplasman şut bilgileri alınamadı {e}")
 
-            if rows[6]:
+            if len(rows) > 6:
                 save_info = rows[6].select("td")
                 if save_info:
                     parsed_home_saves = save_info[0].text.replace("\xa0", "").replace("\n", "").replace("—", " ").split(" ")
@@ -84,7 +89,7 @@ async def team_stats_scrapper(page):
                         except Exception as e:
                             print(f"Deplasman kurtarış bilgileri alınamadı {e}")
 
-            if rows[8]:
+            if len(rows) > 8:
                 card_infos = rows[8].select("td")
                 if card_infos:
                     try:
@@ -117,6 +122,8 @@ async def team_stats_scrapper(page):
                 for div in divs:
                     divs2 = div.select('div')
                     for i, d in enumerate(divs2):
+                        if i == 0 or i + 1 >= len(divs2):
+                            continue
                         if d.text == "Fouls":
                             stats.home_fouls = int(divs2[i - 1].text)
                             stats.away_fouls = int(divs2[i + 1].text)
@@ -146,7 +153,7 @@ async def main():
         url = "https://fbref.com/en/matches/9fd14983/Netherlands-Argentina-December-9-2022-World-Cup"
         page = await browser.get(url)
 
-        result = await team_stats_scrapper(page)
+        result = await team_stats_scraper(page)
         print(result)
     finally:
         browser.stop()

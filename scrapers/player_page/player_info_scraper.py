@@ -51,7 +51,7 @@ async def player_info_scraper(page, url) -> PlayerInfo | None:
                 print(f"Oyuncu boyu alınamadı")
 
             try:
-                player_obj.player_height = int("".join([i for i in others[2].select("span")[1].text.strip() if i.isdigit()]))
+                player_obj.player_weight = int("".join([i for i in others[2].select("span")[1].text.strip() if i.isdigit()]))
             except Exception as e:
                 print(f"Oyuncu kilosu alınamadı {e}")
 
@@ -62,7 +62,8 @@ async def player_info_scraper(page, url) -> PlayerInfo | None:
                 print(f"Oyuncu doğum günü alınamadı {e}")
 
             try:
-                player_obj.player_born_place = others[3].select("span")[1].text.strip().replace("in", "").strip()
+                born_place_parts = others[3].select("span")[1].text.strip().split(" ")
+                player_obj.player_born_place = " ".join(born_place_parts[1::]).strip()
             except Exception as e:
                 print(f"Oyuncu doğum yeri alınamadı {e}")
 

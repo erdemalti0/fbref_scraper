@@ -106,7 +106,11 @@ async def match_events_scraper(page):
     else:
         home_events = []
         for event in home_events_list:
-            event_obj = parse_event(event)
+            try:
+                event_obj = parse_event(event)
+            except Exception as e:
+                print(f"Event alınamadı {e}")
+                continue
             if event_obj:
                 home_events.append(event_obj)
 
@@ -118,7 +122,11 @@ async def match_events_scraper(page):
     else:
         away_events = []
         for event in away_events_list:
-            event_obj = parse_event(event)
+            try:
+                event_obj = parse_event(event)
+            except Exception as e:
+                print(f"Event alınamadı {e}")
+                continue
             if event_obj:
                 away_events.append(event_obj)
 

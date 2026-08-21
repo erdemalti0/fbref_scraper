@@ -1,7 +1,5 @@
 from pydantic import BaseModel, ConfigDict
-from typing import Literal
 from datetime import datetime
-from core.match_report_types import PlayerStats
 
 
 class PlayerInfo(BaseModel):

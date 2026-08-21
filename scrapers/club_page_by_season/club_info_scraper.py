@@ -22,8 +22,8 @@ async def club_info_scraper(page, url):
     try:
         club.club_id = url.split("/")[5]
     except Exception as e:
-        print(f"match_id alınamadı: {e}")
-        club.club_id.match_id = None
+        print(f"club_id alınamadı: {e}")
+        club.club_id = None
 
     info = soup.select_one('div[data-template="Partials/Teams/Summary"]')
     if info:
@@ -55,7 +55,7 @@ async def main():
         url = "https://fbref.com/en/squads/18bb7c10/2025-2026/Arsenal-Stats"
         page = await browser.get(url)
 
-        club = await club_info_scraper(page)
+        club = await club_info_scraper(page, url)
         print(club)
     finally:
         browser.stop()
