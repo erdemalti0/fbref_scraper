@@ -1,4 +1,5 @@
 import sys
+import re
 from bs4 import BeautifulSoup
 import nodriver as uc
 from pathlib import Path
@@ -9,11 +10,14 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from core.player_page_types import PlayerInfo
 from core.browser import start_browser
 
+KNOWN_LABELS = ("Position:", "Born:", "National Team:", "Club:", "Wages:", "Also Played As:", "Instagram:", "Twitter:", "Facebook:")
+
 async def player_info_scraper(page, url) -> PlayerInfo | None:
     player_obj = PlayerInfo()
 
     try:
-        player_obj.player_id = url.split("/")[5]
+        id_match = re.search(r"/([0-9a-f]{8})(?:/|$)", url)
+        player_obj.player_id = id_match.group(1) if id_match else None
     except Exception as e:
         print(f"Oyuncu id si alınamadı: {e}")
 
@@ -33,51 +37,63 @@ async def player_info_scraper(page, url) -> PlayerInfo | None:
         except Exception as e:
             print(f"Oyuncu ismi alınamadı {e}")
 
-        others = meta_html.select('p')
-        if others:
+        others = [p for p in meta_html.select('p') if p.text.strip()]
+
+        full_name_ps = [p for p in others if not p.text.strip().startswith(KNOWN_LABELS) and "cm" not in p.text]
+        if full_name_ps:
             try:
-                player_obj.player_full_name = others[0].text.strip()
+                player_obj.player_full_name = full_name_ps[0].text.strip()
             except Exception as e:
                 print(f"Tam isim alınamadı {e}")
 
+        position_p = next((p for p in others if "Position:" in p.text), None)
+        if position_p:
             try:
-                player_obj.player_position = others[1].find(string=True, recursive=False).text.strip()
+                position_text = position_p.text.strip().replace("Position:", "").split("▪")[0]
+                player_obj.player_position = position_text.replace("\xa0", " ").strip()
             except Exception as e:
-                print(f"Oyuncu pozisyonu alınamadı")
+                print(f"Oyuncu pozisyonu alınamadı {e}")
+
+        physical_p = next((p for p in others if "cm" in p.text), None)
+        if physical_p:
+            try:
+                player_obj.player_height = int("".join([i for i in physical_p.select("span")[0].text.strip() if i.isdigit()]))
+            except Exception as e:
+                print(f"Oyuncu boyu alınamadı {e}")
 
             try:
-                player_obj.player_height = int("".join([i for i in others[2].select("span")[0].text.strip() if i.isdigit()]))
-            except Exception as e:
-                print(f"Oyuncu boyu alınamadı")
-
-            try:
-                player_obj.player_weight = int("".join([i for i in others[2].select("span")[1].text.strip() if i.isdigit()]))
+                player_obj.player_weight = int("".join([i for i in physical_p.select("span")[1].text.strip() if i.isdigit()]))
             except Exception as e:
                 print(f"Oyuncu kilosu alınamadı {e}")
 
+        born_p = next((p for p in others if "Born:" in p.text), None)
+        if born_p:
             try:
-                data = others[3].select("span")[0].text.strip().replace(",", "")
+                data = born_p.select("span")[0].text.strip().replace(",", "")
                 player_obj.player_birth_date = datetime.strptime(data, "%B %d %Y")
             except Exception as e:
                 print(f"Oyuncu doğum günü alınamadı {e}")
 
             try:
-                born_place_parts = others[3].select("span")[1].text.strip().split(" ")
-                player_obj.player_born_place = " ".join(born_place_parts[1::]).strip()
+                place_match = re.search(r"\bin\s+([^\n]+)", born_p.text)
+                player_obj.player_born_place = place_match.group(1).strip() if place_match else None
             except Exception as e:
                 print(f"Oyuncu doğum yeri alınamadı {e}")
 
+        national_p = next((p for p in others if "National Team:" in p.text), None)
+        if national_p:
             try:
-                data = others[4].select("a")
+                data = national_p.select("a")
                 if len(data) > 1:
                     player_obj.player_national_team = data[0].text.strip()
                     player_obj.player_other_national_team = data[1].text.strip()
                 else:
                     player_obj.player_national_team = data[0].text.strip()
             except Exception as e:
-                print(f"Oyuncu milli takım bilgisi alınamadı")
+                print(f"Oyuncu milli takım bilgisi alınamadı {e}")
 
-            return player_obj
+    return player_obj
+
 async def main():
     browser = await start_browser(headless=False)
     try:

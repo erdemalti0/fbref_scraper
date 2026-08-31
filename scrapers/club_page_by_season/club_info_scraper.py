@@ -1,4 +1,5 @@
 import sys
+import re
 from bs4 import BeautifulSoup
 import nodriver as uc
 from pathlib import Path
@@ -20,7 +21,8 @@ async def club_info_scraper(page, url):
     soup = BeautifulSoup(html_content, 'html.parser')
 
     try:
-        club.club_id = url.split("/")[5]
+        id_match = re.search(r"/([0-9a-f]{8})(?:/|$)", url)
+        club.club_id = id_match.group(1) if id_match else None
     except Exception as e:
         print(f"club_id alınamadı: {e}")
         club.club_id = None
@@ -29,24 +31,26 @@ async def club_info_scraper(page, url):
     if info:
         head = info.select_one("h1")
         if head:
-            texts = head.text.replace("\n", "").split(' ')
+            head_span = head.select_one("span")
+            texts = head_span.text.strip().split(" ") if head_span else [t for t in head.text.split() if t]
             try:
                 club.season = texts[0]
             except Exception as e:
                 print(f"Sezon bilgisi alınamadı {e}")
 
             try:
-                club.club_name = texts[1]
+                club.club_name = " ".join(texts[1:texts.index("Stats")]) if "Stats" in texts else " ".join(texts[1:])
             except Exception as e:
                 print(f"Kulüp ismi alınamadı {e}")
 
         paragraphs = info.select('p')
-        try:
-            for p in paragraphs:
-                if p.select_one("strong").text.strip() == "Governing Country:":
+        for p in paragraphs:
+            try:
+                strong = p.select_one("strong")
+                if strong and strong.text.strip() == "Governing Country:":
                     club.country_name = p.select_one("a").text.strip()
-        except Exception as e:
-            print(f"Ülke bilgisi alınamadı {e}")
+            except Exception as e:
+                print(f"Ülke bilgisi alınamadı {e}")
     return club
 
 async def main():

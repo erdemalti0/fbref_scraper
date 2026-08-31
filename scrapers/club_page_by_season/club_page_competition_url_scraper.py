@@ -49,14 +49,14 @@ async def competition_url_scraper(page, url) -> list[CompetitionUrl] | None :
 
 async def main():
     browser = await start_browser()
-    url = "https://fbref.com/en/squads/18bb7c10/2025-2026/Arsenal-Stats"
     try:
+        url = "https://fbref.com/en/squads/18bb7c10/2025-2026/Arsenal-Stats"
         page = await browser.get(url)
         await competition_url_scraper(page, url)
     except Exception as e:
-        print(f"Turnuva bilgisi alınamadı")
+        print(f"Turnuva bilgisi alınamadı {e}")
+    finally:
         browser.stop()
-        return None
 
 if __name__ == "__main__":
     uc.loop().run_until_complete(main())

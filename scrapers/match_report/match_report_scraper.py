@@ -1,4 +1,5 @@
 import sys
+import re
 from bs4 import BeautifulSoup
 from pathlib import Path
 from datetime import datetime
@@ -59,7 +60,8 @@ async def match_general_info_scraper(page ,url: str) -> GeneralMatchInfo:
 
     # Match id from url
     try:
-        info_obj.match_id = url.split("/")[5]
+        id_match = re.search(r"/([0-9a-f]{8})(?:/|$)", url)
+        info_obj.match_id = id_match.group(1) if id_match else None
     except Exception as e:
         print(f"match_id alınamadı: {e}")
         info_obj.match_id = None

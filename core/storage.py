@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 def save_json(model, storage_dir: Path, report_id: str | None, fallback_prefix: str) -> Path | None:
-    storage_dir.mkdir(exist_ok=True)
+    storage_dir.mkdir(parents=True, exist_ok=True)
 
     if not report_id:
         i = 1

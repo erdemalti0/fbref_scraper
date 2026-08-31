@@ -30,7 +30,8 @@ async def player_stats_scraper(page):
         home_table = tables[0]
         away_table = tables[1]
 
-        tr_in_col_names = home_table.select_one("thead").select("tr")[1]
+        thead_rows = home_table.select_one("thead").select("tr")
+        tr_in_col_names = thead_rows[1] if len(thead_rows) > 1 else None
 
         if tr_in_col_names:
             column_names = column_name_scraper(tr_in_col_names)
@@ -46,11 +47,12 @@ async def player_stats_scraper(page):
                 print(e)
 
 
-    if goalkeeper_tables:
+    if len(goalkeeper_tables) > 1:
         home_goalkeeper_table = goalkeeper_tables[0]
         away_goalkeeper_table = goalkeeper_tables[1]
 
-        tr_in_col_names = home_goalkeeper_table.select_one("thead").select("tr")[1]
+        thead_rows = home_goalkeeper_table.select_one("thead").select("tr")
+        tr_in_col_names = thead_rows[1] if len(thead_rows) > 1 else None
 
         if tr_in_col_names:
             column_names = column_name_scraper(tr_in_col_names)

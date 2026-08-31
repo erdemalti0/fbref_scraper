@@ -48,8 +48,8 @@ def save_report(report: MatchReport) -> Path | None:
     return save_json(report, STORAGE_DIR, match_id, "match")
 
 
-async def scrape_match_report(url: str, headless: bool = False) -> MatchReport:
-    browser = await start_browser(headless=headless)
+async def scrape_match_report(url: str) -> MatchReport:
+    browser = await start_browser()
     try:
         page = await browser.get(url)
         report = await scrape_page(page, url)
@@ -59,8 +59,8 @@ async def scrape_match_report(url: str, headless: bool = False) -> MatchReport:
         browser.stop()
 
 
-async def scrape_many(urls: list[str], headless: bool = False, delay: float = 3.0) -> list[MatchReport]:
-    browser = await start_browser(headless=headless)
+async def scrape_many(urls: list[str], delay: float = 3.0) -> list[MatchReport]:
+    browser = await start_browser()
     try:
         reports = []
         for i, url in enumerate(urls):
@@ -82,7 +82,7 @@ async def scrape_many(urls: list[str], headless: bool = False, delay: float = 3.
 
 async def main():
     url = "https://fbref.com/en/matches/675b328b/Argentina-Cabo-Verde-July-3-2026-World-Cup"
-    report = await scrape_match_report(url, headless=False)
+    report = await scrape_match_report(url)
     print(report)
 
 

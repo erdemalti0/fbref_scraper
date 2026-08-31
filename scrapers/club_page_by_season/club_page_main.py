@@ -39,7 +39,7 @@ async def scrape_page(page, url, browser):
                 competition = await competition_scraper(new_page, u.competition_name)
                 competitions.append(competition)
             except Exception as e:
-                print(f"Turnuva bilgisi alınamadı")
+                print(f"Turnuva bilgisi alınamadı {e}")
 
     if competitions:
         club.competitions = competitions
@@ -58,8 +58,8 @@ def save_report(club: ClubPageBySeason) -> Path | None:
     club_id = club.club_info.club_id if club.club_info and club.club_info.club_id else None
     return save_json(club, STORAGE_DIR, club_id, "club")
 
-async def scrape_club_page(url: str, headless: bool = False) -> ClubPageBySeason:
-    browser = await start_browser(headless=headless)
+async def scrape_club_page(url: str) -> ClubPageBySeason:
+    browser = await start_browser()
     try:
         page = await browser.get(url)
         club = await scrape_page(page, url, browser)
@@ -70,7 +70,7 @@ async def scrape_club_page(url: str, headless: bool = False) -> ClubPageBySeason
 
 async def main():
     url = "https://fbref.com/en/squads/18bb7c10/2025-2026/Arsenal-Stats"
-    club = await scrape_club_page(url, headless=False)
+    club = await scrape_club_page(url)
 
 if __name__ == "__main__":
     uc.loop().run_until_complete(main())

@@ -1,4 +1,5 @@
 import sys
+import re
 from bs4 import BeautifulSoup
 import nodriver as uc
 from pathlib import Path
@@ -42,6 +43,9 @@ async def team_stats_scraper(page):
                 if home_possession + away_possession == 101:
                     home_possession = home_possession - 0.5
                     away_possession = away_possession - 0.5
+                elif home_possession + away_possession == 99:
+                    home_possession = home_possession + 0.5
+                    away_possession = away_possession + 0.5
                 stats.home_possession = float(home_possession)
                 stats.away_possession = float(away_possession)
             except Exception as e:
@@ -52,40 +56,40 @@ async def team_stats_scraper(page):
         if len(rows) > 4:
             shot_infos = rows[4].select("td")
             if shot_infos:
-                parsed_home_shots = shot_infos[0].text.replace("\xa0", "").replace("\n", "").replace("—", " ").split(" ")
-                parsed_away_shots = shot_infos[1].text.replace("\xa0", "").replace("\n", "").replace("—", " ").split(" ")
-                if parsed_home_shots:
+                home_match = re.search(r"(\d+)\s+of\s+(\d+)", shot_infos[0].text)
+                away_match = re.search(r"(\d+)\s+of\s+(\d+)", shot_infos[1].text)
+                if home_match:
 
                     try:
-                        stats.home_shots = int(parsed_home_shots[2]) if parsed_home_shots[1] else None
-                        stats.home_shots_on_target = int(parsed_home_shots[0]) if parsed_home_shots[0] else None
-                        stats.home_missed_shots = stats.home_shots - stats.home_shots_on_target if stats.home_shots_on_target else stats.home_shots
+                        stats.home_shots_on_target = int(home_match.group(1))
+                        stats.home_shots = int(home_match.group(2))
+                        stats.home_missed_shots = stats.home_shots - stats.home_shots_on_target
                     except Exception as e:
                         print(f"Ev sahibi şut bilgileri alınamadı {e}")
 
-                if parsed_away_shots:
+                if away_match:
                     try:
-                        stats.away_shots = int(parsed_away_shots[3]) if parsed_away_shots[1] else None
-                        stats.away_shots_on_target = int(parsed_away_shots[1]) if parsed_away_shots[0] else None
-                        stats.away_missed_shots = stats.away_shots - stats.away_shots_on_target if stats.away_shots_on_target else stats.away_shots
+                        stats.away_shots_on_target = int(away_match.group(1))
+                        stats.away_shots = int(away_match.group(2))
+                        stats.away_missed_shots = stats.away_shots - stats.away_shots_on_target
                     except Exception as e:
                         print(f"Deplasman şut bilgileri alınamadı {e}")
 
             if len(rows) > 6:
                 save_info = rows[6].select("td")
                 if save_info:
-                    parsed_home_saves = save_info[0].text.replace("\xa0", "").replace("\n", "").replace("—", " ").split(" ")
-                    parsed_away_saves = save_info[1].text.replace("\xa0", "").replace("\n", "").replace("—", " ").split(" ")
-                    if parsed_home_saves:
+                    home_save_match = re.search(r"(\d+)\s+of\s+\d+", save_info[0].text)
+                    away_save_match = re.search(r"(\d+)\s+of\s+\d+", save_info[1].text)
+                    if home_save_match:
 
                         try:
-                            stats.home_saves = int(parsed_home_saves[0]) if parsed_home_saves[0] else None
+                            stats.home_saves = int(home_save_match.group(1))
                         except Exception as e:
                             print(f"Ev sahibi kurtarış bilgileri alınamadı {e}")
 
-                    if parsed_away_saves:
+                    if away_save_match:
                         try:
-                            stats.away_saves = int(parsed_away_saves[1]) if parsed_away_saves[1] else None
+                            stats.away_saves = int(away_save_match.group(1))
                         except Exception as e:
                             print(f"Deplasman kurtarış bilgileri alınamadı {e}")
 
@@ -107,13 +111,13 @@ async def team_stats_scraper(page):
                         try:
                             stats.home_red_cards = (stats.home_red_cards or 0) + len(card_infos[0].select('span[class="yellow_red_card"]'))
                         except Exception as e:
-                            pass
+                            print(f"Ev sahibi kırmızı kart bilgisi alınamadı {e}")
 
                     elif card_infos[1].select('span[class="yellow_red_card"]'):
                         try:
                             stats.away_red_cards = (stats.away_red_cards or 0) + len(card_infos[1].select('span[class="yellow_red_card"]'))
                         except Exception as e:
-                            pass
+                            print(f"Deplasman kırmızı kart bilgisi alınamadı {e}")
 
         extra = soup.find('div', id='team_stats_extra')
         if extra:

@@ -17,7 +17,7 @@ def parse_event(event_div):
     try:
         minute_div = event_div.select('div')[0]
         minute = "".join(minute_div.find_all(string=True, recursive=False)).strip()
-        minute = normalize_minute(minute.replace("&nbsp9;", ""))
+        minute = normalize_minute(minute.replace("\xa0", ""))
     except Exception as e:
         minute = None
         print(f"Dakika bilgisi alınamadı {e}")
@@ -28,52 +28,52 @@ def parse_event(event_div):
 
     if "goal" in icon_class and "own_goal" not in icon_class:
         return GoalInfo(
-            scorer=players[0].text.strip() if players[0].text.strip() else None,
+            scorer=players[0].text.strip() if players and players[0].text.strip() else None,
             assist_provider=players[1].text.strip() if len(players) > 1 else None,
             minute=minute,
         )
 
     elif "own_goal" in icon_class:
         return GoalInfo(
-            scorer=players[0].text.strip() if players[0].text.strip() else None,
+            scorer=players[0].text.strip() if players and players[0].text.strip() else None,
             is_own_goal=True,
             minute=minute,
         )
 
     elif "penalty_miss" in icon_class:
         return MissedPenalty(
-            player_name=players[0].text.strip() if players[0].text.strip() else None,
+            player_name=players[0].text.strip() if players and players[0].text.strip() else None,
             minute=minute,
         )
 
 
     elif "yellow_card" in icon_class:
         return CardEvent(
-            player_name=players[0].text.strip() if players[0].text.strip() else None,
+            player_name=players[0].text.strip() if players and players[0].text.strip() else None,
             minute=minute,
             card_type="yellow_card",
         )
 
 
-    elif "red_card" in icon_class:
-        return CardEvent(
-            player_name=players[0].text.strip() if players[0].text.strip() else None,
-            minute=minute,
-            card_type="red_card",
-            red_type="direct",
-        )
-
     elif "yellow_red_card" in icon_class:
         return CardEvent(
-            player_name=players[0].text.strip() if players[0].text.strip() else None,
+            player_name=players[0].text.strip() if players and players[0].text.strip() else None,
             minute=minute,
             card_type="red_card",
             red_type="two_yellow",
         )
 
+    elif "red_card" in icon_class:
+        return CardEvent(
+            player_name=players[0].text.strip() if players and players[0].text.strip() else None,
+            minute=minute,
+            card_type="red_card",
+            red_type="direct",
+        )
+
     elif "substitute_in" in icon_class:
         return Substitution(
-            player_in=players[0].text.strip() if players[0].text.strip() else None,
+            player_in=players[0].text.strip() if players and players[0].text.strip() else None,
             player_out=players[1].text.strip() if len(players) > 1 else None,
             minute=minute,
         )

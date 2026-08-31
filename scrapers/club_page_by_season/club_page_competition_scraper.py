@@ -12,7 +12,9 @@ from core.club_page_by_season_types import ClubCompetition
 
 
 def comp_matches(row_comp, competition_name) -> bool:
-    return str(row_comp).strip().lower().split(" ")[0] == competition_name.strip().lower().split(" ")[0]
+    row = str(row_comp).strip().lower()
+    comp = competition_name.strip().lower()
+    return comp in row or row in comp
 
 
 async def competition_scraper(page, competition_name) -> ClubCompetition | None:
@@ -90,7 +92,7 @@ async def main() -> None:
     try:
         page = await browser.get(url)
         await asyncio.sleep(3)
-        await competition_scrapper(page, "ucl")
+        await competition_scraper(page, "ucl")
     finally:
         browser.stop()
 

@@ -39,8 +39,8 @@ def save_report(player: PlayerPage) -> Path | None:
     player_id = player.info.player_id if player.info and player.info.player_id else None
     return save_json(player, STORAGE_DIR, player_id, "player")
 
-async def scrape_player_page(url: str, headless: bool = False) -> PlayerPage:
-    browser = await start_browser(headless=headless)
+async def scrape_player_page(url: str) -> PlayerPage:
+    browser = await start_browser()
     try:
         page = await browser.get(url)
         report = await scrape_page(page, url)
@@ -51,7 +51,7 @@ async def scrape_player_page(url: str, headless: bool = False) -> PlayerPage:
 
 async def main():
     url = "https://fbref.com/en/players/e6af3cc7/Clarence-Seedorf"
-    player = await scrape_player_page(url, headless=False)
+    player = await scrape_player_page(url)
     print(player)
 
 

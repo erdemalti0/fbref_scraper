@@ -1,16 +1,16 @@
-from core.player_page_types import *
-from core.match_report_types import *
-from core.club_page_by_season_types import *
+from core.match_report_types import PlayerStats
+from core.club_page_by_season_types import FixtureRow
 from typing import Literal
 import re
 
 def parse_cell_value(text: str):
     if not text:
         return None
-    if text.isdigit():
-        return int(text)
+    cleaned = text.replace(",", "")
+    if cleaned.isdigit():
+        return int(cleaned)
     try:
-        return float(text)
+        return float(cleaned)
     except ValueError:
         return text
 
@@ -59,7 +59,9 @@ def row_scraper(content, columns, model_cls=PlayerStats) -> list:
     first_col_name = columns[0]["column_name"].strip().lower() if columns else ""
     for row in content:
         all_cels = row.find_all(["th", "td"])
-        if first_col_name and all_cels and all_cels[0].text.strip().lower() == first_col_name:
+        if not all_cels or not any(cel.text.strip() for cel in all_cels):
+            continue
+        if first_col_name and all_cels[0].text.strip().lower() == first_col_name:
             continue
         stats = model_cls()
         for i, cel in enumerate(all_cels):
@@ -107,6 +109,8 @@ def table_scraper(content, table_name, obj, return_type: Literal["player", "fixt
                         result = row_scraper(rows, column_names, PlayerStats)
                     elif return_type.lower() == "fixture":
                         result = row_scraper(rows, column_names, FixtureRow)
+                    else:
+                        result = row_scraper(rows, column_names)
 
                     setattr(obj, table_name, result)
                 except Exception as e:
@@ -124,7 +128,7 @@ def table_scraper(content, table_name, obj, return_type: Literal["player", "fixt
 
             temp = []
             for tr in trs:
-                if tr.get("class", "") == ["spacer", "partial_table"]:
+                if set(tr.get("class", [])) == {"spacer", "partial_table"}:
                     continue
                 temp.append(tr)
 
