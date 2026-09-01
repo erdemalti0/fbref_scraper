@@ -19,9 +19,15 @@ STORAGE_DIR = Path(__file__).resolve().parent.parent.parent / "storage"
 
 
 async def scrape_page(page, url: str) -> MatchReport:
-    try:
-        await page.wait_for('div[id="footer"]')
-    except Exception:
+    loaded = False
+    for attempt in range(3):
+        try:
+            await page.wait_for('div[id="footer"]')
+            loaded = True
+            break
+        except Exception:
+            await asyncio.sleep(2)
+    if not loaded:
         raise RuntimeError(f"Sayfa tam yüklenemedi {url}")
 
     report = MatchReport()

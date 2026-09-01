@@ -1,5 +1,6 @@
 import sys
 import re
+import asyncio
 from bs4 import BeautifulSoup
 import nodriver as uc
 from pathlib import Path
@@ -11,11 +12,17 @@ from core.club_page_by_season_types import ClubInfo
 
 async def club_info_scraper(page, url):
     club = ClubInfo()
-    try:
-        print("Kulüp bilgileri alınıyor")
-        await page.wait_for('div[data-template="Partials/Teams/Summary"]')
-    except Exception as e:
-        raise RuntimeError(f"Kulüp bilgileri alınamadı {e}")
+    print("Kulüp bilgileri alınıyor")
+    loaded = False
+    for attempt in range(3):
+        try:
+            await page.wait_for('div[data-template="Partials/Teams/Summary"]')
+            loaded = True
+            break
+        except Exception:
+            await asyncio.sleep(2)
+    if not loaded:
+        raise RuntimeError("Kulüp bilgileri alınamadı")
 
     html_content = await page.get_content()
     soup = BeautifulSoup(html_content, 'html.parser')

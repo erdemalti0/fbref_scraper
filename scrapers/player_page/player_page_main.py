@@ -1,4 +1,5 @@
 import sys
+import asyncio
 from pathlib import Path
 
 import nodriver as uc
@@ -14,10 +15,15 @@ from scrapers.player_page.player_all_table_scraper import all_stats_scraper
 STORAGE_DIR = Path(__file__).resolve().parent.parent.parent / "storage/players"
 
 async def scrape_page(page, url):
-
-    try:
-        await page.wait_for('div[id="footer"]')
-    except Exception:
+    loaded = False
+    for attempt in range(3):
+        try:
+            await page.wait_for('div[id="footer"]')
+            loaded = True
+            break
+        except Exception:
+            await asyncio.sleep(2)
+    if not loaded:
         raise RuntimeError(f"Sayfa tam yüklenemedi {url}")
 
     player = PlayerPage()

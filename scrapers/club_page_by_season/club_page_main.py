@@ -17,11 +17,17 @@ from scrapers.club_page_by_season.club_page_competition_scraper import competiti
 STORAGE_DIR = Path(__file__).resolve().parent.parent.parent / "storage/clubs"
 
 
-async def scrape_page(page, url, browser):
+async def scrape_page(page, url):
 
-    try:
-        await page.wait_for('div[id="footer"]')
-    except Exception:
+    loaded = False
+    for attempt in range(3):
+        try:
+            await page.wait_for('div[id="footer"]')
+            loaded = True
+            break
+        except Exception:
+            await asyncio.sleep(2)
+    if not loaded:
         raise RuntimeError(f"Sayfa tam yüklenemedi {url}")
 
     club = ClubPageBySeason()
@@ -32,11 +38,9 @@ async def scrape_page(page, url, browser):
         for u in urls:
             try:
                 if u.competition_url:
-                    new_page = await browser.get(u.competition_url)
+                    await page.get(u.competition_url)
                     await asyncio.sleep(3)
-                else:
-                    new_page = page
-                competition = await competition_scraper(new_page, u.competition_name)
+                competition = await competition_scraper(page, u.competition_name)
                 competitions.append(competition)
             except Exception as e:
                 print(f"Turnuva bilgisi alınamadı {e}")
@@ -45,6 +49,7 @@ async def scrape_page(page, url, browser):
         club.competitions = competitions
 
     try:
+        await page.get(url)
         info = await club_info_scraper(page, url)
         if info:
             club.club_info = info
@@ -62,7 +67,7 @@ async def scrape_club_page(url: str) -> ClubPageBySeason:
     browser = await start_browser()
     try:
         page = await browser.get(url)
-        club = await scrape_page(page, url, browser)
+        club = await scrape_page(page, url)
         save_report(club)
         return club
     finally:
