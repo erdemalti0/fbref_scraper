@@ -38,8 +38,8 @@ A league or tournament page (including the Champions League):
 The project is managed with [uv](https://docs.astral.sh/uv/). Requires Python 3.11+.
 
 ```bash
-git clone https://github.com/erdemalti0/fbref_scrapper
-cd fbref_scrapper
+git clone https://github.com/erdemalti0/fbref_scraper
+cd fbref_scraper
 uv sync
 ```
 
