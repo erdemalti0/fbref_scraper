@@ -14,6 +14,7 @@ from scrapers.league_page.league_info_scraper import league_info_scraper
 from scrapers.league_page.league_standings_scraper import league_standings_scraper
 from scrapers.league_page.league_squad_stats_scraper import league_squad_stats_scraper
 from scrapers.league_page.league_fixture_scraper import league_fixture_scraper
+from scrapers.league_page.league_leaders_scraper import league_leaders_scraper
 
 logger = get_logger(__name__)
 
@@ -49,6 +50,11 @@ async def scrape_page(page, url):
         await league_squad_stats_scraper(page, league)
     except Exception as e:
         logger.error(f"Squad stats could not be scraped ({url}): {e}")
+
+    try:
+        await league_leaders_scraper(page, league)
+    except Exception as e:
+        logger.error(f"Leaders could not be scraped ({url}): {e}")
 
     try:
         comp_id = league.league_info.comp_id if league.league_info else None
