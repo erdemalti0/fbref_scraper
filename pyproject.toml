@@ -1,6 +1,13 @@
 [project]
 name = "fbref-scraper"
 version = "0.1.0"
+description = "Football data scraper for fbref.com — match reports, player, club and league stats as JSON"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "erdemalti0"},
+]
+keywords = ["fbref", "football", "soccer", "webscraping", "data-scraping"]
 requires-python = ">=3.11"
 dependencies = [
     "bs4>=0.0.2",
