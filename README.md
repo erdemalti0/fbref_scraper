@@ -55,7 +55,7 @@ python main.py <type> <url>
 |----------|--------------------|------------------------------------------------------------------------|
 | `match`  | Match report       | `https://fbref.com/en/matches/675b328b/...`                            |
 | `player` | Player page        | `https://fbref.com/en/players/e6af3cc7/Clarence-Seedorf`               |
-| `club`   | Club season page   | `https://fbref.com/en/squads/.../Galatasaray-Stats`                    |
+| `club`   | Club season page   | `https://fbref.com/en/squads/206d90db/Barcelona-Stats`                 |
 | `league` | League page        | `https://fbref.com/en/comps/9/Premier-League-Stats`                    |
 
 Example:
