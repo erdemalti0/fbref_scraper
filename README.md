@@ -1,41 +1,41 @@
 # FBRef Scraper
 
-[fbref.com](https://fbref.com) üzerinden futbol verisi çeken bir web scraper projesi. Gerçek bir tarayıcı (Chrome) kullanarak sayfaları açar, tabloları parse eder ve sonuçları JSON olarak kaydeder.
+A web scraper for collecting football data from [fbref.com](https://fbref.com). It opens pages in a real Chrome browser, parses the tables, and saves the results as JSON.
 
-## Neler Çekilebilir?
+## What Can Be Scraped?
 
-Proje 4 farklı sayfa tipini destekler:
+The project supports 4 page types:
 
-### Maç Raporu (`match`)
-Tek bir maçın detaylı raporunu çeker:
-- Maç genel bilgileri (tarih, stadyum, hakem, skor)
-- Takım istatistikleri (şut, isabetli şut, kurtarış, topa sahip olma vb.)
-- Oyuncu istatistikleri (her iki takımın tüm oyuncuları)
-- Maç olayları (gol, asist, kart, oyuncu değişikliği)
-- Kadrolar ve dizilişler
+### Match Report (`match`)
+Detailed report of a single match:
+- General match info (date, stadium, referee, score)
+- Team stats (shots, shots on target, saves, possession, etc.)
+- Player stats (all players from both teams)
+- Match events (goals, assists, cards, substitutions)
+- Squads and formations
 
-### Oyuncu Sayfası (`player`)
-Bir oyuncunun profil sayfasını çeker:
-- Oyuncu bilgileri (isim, mevki, boy, kilo, ayak, doğum tarihi vb.)
-- Kariyer istatistik tabloları (standart, şut, pas, defans vb. tüm tablolar)
+### Player Page (`player`)
+A player's profile page:
+- Player info (name, position, height, weight, foot, birth date, etc.)
+- Career stat tables (standard, shooting, passing, defense, and all other tables)
 
-### Kulüp Sayfası (`club`)
-Bir kulübün sezonluk sayfasını çeker:
-- Kulüp bilgileri
-- Kulübün o sezon oynadığı tüm turnuvalardaki istatistik tabloları (lig, kupa, avrupa vb. her turnuva için ayrı)
+### Club Page (`club`)
+A club's season page:
+- Club info
+- Stat tables for every competition the club played that season (league, cup, european competitions, etc.)
 
-### Lig / Turnuva Sayfası (`league`)
-Bir lig veya turnuvanın (Şampiyonlar Ligi dahil) sayfasını çeker:
-- Lig bilgileri
-- Puan durumu (UCL gibi turnuvalarda grup tabloları dahil, çoklu tablo desteği)
-- Takım istatistikleri (for/against)
-- Fikstür ve oynanmış maçların linkleri
-- Liderlik tabloları (gol kralı, asist kralı vb. 35 kategori)
-- Uyruk dağılımı
+### League / Tournament Page (`league`)
+A league or tournament page (including the Champions League):
+- League info
+- Standings (including group tables in tournaments like the UCL, multi-table support)
+- Squad stats (for/against)
+- Fixtures and links to played matches
+- Leaderboards (top scorer, top assists, etc. — 35 categories)
+- Nation distribution
 
-## Kurulum
+## Installation
 
-Proje [uv](https://docs.astral.sh/uv/) ile yönetiliyor. Python 3.11+ gerektirir.
+The project is managed with [uv](https://docs.astral.sh/uv/). Requires Python 3.11+.
 
 ```bash
 git clone https://github.com/erdemalti0/fbref_scrapper
@@ -43,69 +43,69 @@ cd fbref_scrapper
 uv sync
 ```
 
-Tarayıcı olarak bilgisayarınızda Chrome yüklü olmalı (nodriver gerçek Chrome kullanır, headless çalışmaz — fbref headless tarayıcıları engeller).
+Chrome must be installed on your machine (nodriver drives a real Chrome instance — headless mode does not work, fbref blocks headless browsers).
 
-## Kullanım
+## Usage
 
 ```bash
-python main.py <tip> <url>
+python main.py <type> <url>
 ```
 
-| Tip      | Açıklama            | Örnek URL                                                              |
-|----------|---------------------|------------------------------------------------------------------------|
-| `match`  | Maç raporu          | `https://fbref.com/en/matches/675b328b/...`                            |
-| `player` | Oyuncu sayfası      | `https://fbref.com/en/players/e6af3cc7/Clarence-Seedorf`               |
-| `club`   | Kulüp sezon sayfası | `https://fbref.com/en/squads/.../Galatasaray-Stats`                    |
-| `league` | Lig/turnuva sayfası | `https://fbref.com/en/comps/9/Premier-League-Stats`                    |
+| Type     | Description        | Example URL                                                            |
+|----------|--------------------|------------------------------------------------------------------------|
+| `match`  | Match report       | `https://fbref.com/en/matches/675b328b/...`                            |
+| `player` | Player page        | `https://fbref.com/en/players/e6af3cc7/Clarence-Seedorf`               |
+| `club`   | Club season page   | `https://fbref.com/en/squads/.../Galatasaray-Stats`                    |
+| `league` | League page        | `https://fbref.com/en/comps/9/Premier-League-Stats`                    |
 
-Örnek:
+Example:
 
 ```bash
 python main.py league https://fbref.com/en/comps/9/Premier-League-Stats
 ```
 
-URL ile tip uyuşmazsa (örneğin `match` tipine oyuncu linki verilirse) program tarayıcıyı açmadan hata verir. Detaylar için:
+If the URL does not match the type (e.g. a player URL with the `match` type), the program exits with an error before opening the browser. For details:
 
 ```bash
 python main.py --help
 ```
 
-## Çıktılar
+## Output
 
-Çekilen veriler `storage/` klasörüne JSON olarak kaydedilir:
+Scraped data is saved as JSON under `storage/`:
 
 ```
 storage/
-├── players/    # oyuncu raporları
-├── clubs/      # kulüp raporları
-├── leagues/    # lig/turnuva raporları
-└── *.json      # maç raporları
+├── players/    # player reports
+├── clubs/      # club reports
+├── leagues/    # league/tournament reports
+└── *.json      # match reports
 ```
 
-Dosya adları sayfadaki ID'lerden gelir (ör. `9_2026-2027.json` Premier League 2026-2027 sezonu).
+File names come from the IDs on the page (e.g. `9_2026-2027.json` for the 2026-2027 Premier League season).
 
-Loglar `logs/scraper.log` dosyasında rotasyonlu olarak tutulur ve konsola da yazılır.
+Logs are written to `logs/scraper.log` with rotation, and also printed to the console.
 
-## Proje Yapısı
+## Project Structure
 
 ```
-core/                       # tarayıcı, tip tanımları (pydantic), yardımcı fonksiyonlar, storage, logger
+core/                       # browser, type definitions (pydantic), helper functions, storage, logger
 scrapers/
-├── match_report/           # maç raporu scraper'ları
-├── player_page/            # oyuncu sayfası scraper'ları
-├── club_page_by_season/    # kulüp sayfası scraper'ları
-└── league_page/            # lig/turnuva scraper'ları
-main.py                     # CLI giriş noktası
+├── match_report/           # match report scrapers
+├── player_page/            # player page scrapers
+├── club_page_by_season/    # club page scrapers
+└── league_page/            # league/tournament scrapers
+main.py                     # CLI entry point
 ```
 
-Her scraper modülü kendi içinde `if __name__ == "__main__"` bloğuyla bağımsız test edilebilir.
+Each scraper module can be tested independently via its own `if __name__ == "__main__"` block.
 
-## Teknolojiler
+## Technologies
 
-- **nodriver** — Chrome tabanlı tarayıcı otomasyonu
-- **BeautifulSoup** — HTML parse
-- **pydantic** — veri modelleri ve JSON serileştirme
+- **nodriver** — Chrome-based browser automation
+- **BeautifulSoup** — HTML parsing
+- **pydantic** — data models and JSON serialization
 
-## Lisans
+## License
 
 MIT
