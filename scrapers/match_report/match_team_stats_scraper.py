@@ -8,14 +8,18 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.match_report_types import TeamStats
 from core.browser import start_browser
+from core.logger import get_logger
+
+logger = get_logger(__name__)
+
 async def team_stats_scraper(page):
 
     try:
-        print("Scrapping team stats")
+        logger.info("Scraping team stats")
         await page.select('div[id="team_stats"]')
         await page.select('div[id="team_stats_extra"]')
     except Exception as e:
-        print(f"Takım statları alınamadı {e}")
+        logger.warning(f"Team stats section could not be loaded: {e}")
 
     html_content = await page.get_content()
     soup = BeautifulSoup(html_content, 'html.parser')
@@ -31,9 +35,9 @@ async def team_stats_scraper(page):
                 stats.home_name = team_names[0].text.strip() if team_names[0] else None
                 stats.away_name = team_names[1].text.strip() if team_names[1] else None
             except Exception as e:
-                print(f"Takım adları alınamadı {e}")
+                logger.warning(f"Team names could not be parsed: {e}")
         else:
-            print("Takım adları bulunamadı")
+            logger.warning("Team names not found")
 
         if len(rows) > 2:
             possesion_infos = rows[2].select("strong")
@@ -49,9 +53,9 @@ async def team_stats_scraper(page):
                 stats.home_possession = float(home_possession)
                 stats.away_possession = float(away_possession)
             except Exception as e:
-                print(f"Topla oynama bilgileri alınamadı {e}")
+                logger.warning(f"Possession stats could not be parsed: {e}")
         else:
-            print("Topla oynama bilgileri bulunamadı")
+            logger.warning("Possession stats not found")
 
         if len(rows) > 4:
             shot_infos = rows[4].select("td")
@@ -65,7 +69,7 @@ async def team_stats_scraper(page):
                         stats.home_shots = int(home_match.group(2))
                         stats.home_missed_shots = stats.home_shots - stats.home_shots_on_target
                     except Exception as e:
-                        print(f"Ev sahibi şut bilgileri alınamadı {e}")
+                        logger.warning(f"Home shot stats could not be parsed: {e}")
 
                 if away_match:
                     try:
@@ -73,7 +77,7 @@ async def team_stats_scraper(page):
                         stats.away_shots = int(away_match.group(2))
                         stats.away_missed_shots = stats.away_shots - stats.away_shots_on_target
                     except Exception as e:
-                        print(f"Deplasman şut bilgileri alınamadı {e}")
+                        logger.warning(f"Away shot stats could not be parsed: {e}")
 
             if len(rows) > 6:
                 save_info = rows[6].select("td")
@@ -85,13 +89,13 @@ async def team_stats_scraper(page):
                         try:
                             stats.home_saves = int(home_save_match.group(1))
                         except Exception as e:
-                            print(f"Ev sahibi kurtarış bilgileri alınamadı {e}")
+                            logger.warning(f"Home save stats could not be parsed: {e}")
 
                     if away_save_match:
                         try:
                             stats.away_saves = int(away_save_match.group(1))
                         except Exception as e:
-                            print(f"Deplasman kurtarış bilgileri alınamadı {e}")
+                            logger.warning(f"Away save stats could not be parsed: {e}")
 
             if len(rows) > 8:
                 card_infos = rows[8].select("td")
@@ -104,20 +108,20 @@ async def team_stats_scraper(page):
                         stats.away_red_cards = len(card_infos[1].select('span[class="red_card"]'))
 
                     except Exception as e:
-                        print(f"Kart bilgileri çekilemedi {e}")
+                        logger.warning(f"Card stats could not be parsed: {e}")
 
                     if card_infos[0].select('span[class="yellow_red_card"]'):
 
                         try:
                             stats.home_red_cards = (stats.home_red_cards or 0) + len(card_infos[0].select('span[class="yellow_red_card"]'))
                         except Exception as e:
-                            print(f"Ev sahibi kırmızı kart bilgisi alınamadı {e}")
+                            logger.warning(f"Home red card count could not be updated: {e}")
 
                     elif card_infos[1].select('span[class="yellow_red_card"]'):
                         try:
                             stats.away_red_cards = (stats.away_red_cards or 0) + len(card_infos[1].select('span[class="yellow_red_card"]'))
                         except Exception as e:
-                            print(f"Deplasman kırmızı kart bilgisi alınamadı {e}")
+                            logger.warning(f"Away red card count could not be updated: {e}")
 
         extra = soup.find('div', id='team_stats_extra')
         if extra:
@@ -144,10 +148,10 @@ async def team_stats_scraper(page):
                             stats.home_offsides = int(divs2[i - 1].text)
                             stats.away_offsides = int(divs2[i + 1].text)
             except Exception as e:
-                print(f"Extra stat bilgileri alınamadı {e}")
+                logger.warning(f"Extra team stats could not be parsed: {e}")
 
     else:
-        print("Team stats çekilemedi")
+        logger.warning("Team stats table not found")
 
     return stats
 

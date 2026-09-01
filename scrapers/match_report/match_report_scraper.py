@@ -9,6 +9,9 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.match_report_types import GeneralMatchInfo, GoalInfo, normalize_minute
 from core.browser import start_browser
+from core.logger import get_logger
+
+logger = get_logger(__name__)
 
 def goal_list_creator(content) -> list:
     goals_list = []
@@ -44,26 +47,26 @@ async def match_general_info_scraper(page ,url: str) -> GeneralMatchInfo:
     info_obj = GeneralMatchInfo()
 
     try:
-        print("Scrapping: " + url)
+        logger.info(f"Scraping: {url}")
         await page.wait_for('div.scorebox')
     except Exception:
-        raise RuntimeError(f"Sayfa alınamadı {url}")
+        raise RuntimeError(f"Page could not be loaded: {url}")
 
-    print("Scrapping başarılı")
+    logger.info("Scraping successful")
 
     html_content = await page.get_content()
     soup = BeautifulSoup(html_content, 'html.parser')
 
     scorebox = soup.find('div', class_='scorebox')
     if not scorebox:
-        raise RuntimeError(f"Scorebox bulunamadı: {url}")
+        raise RuntimeError(f"Scorebox not found: {url}")
 
     # Match id from url
     try:
         id_match = re.search(r"/([0-9a-f]{8})(?:/|$)", url)
         info_obj.match_id = id_match.group(1) if id_match else None
     except Exception as e:
-        print(f"match_id alınamadı: {e}")
+        logger.warning(f"match_id could not be parsed: {e}")
         info_obj.match_id = None
 
     scorebox_meta = soup.select_one('div[class="scorebox_meta"]')
@@ -73,14 +76,14 @@ async def match_general_info_scraper(page ,url: str) -> GeneralMatchInfo:
         data = " ".join(scorebox_meta.select_one('a[href*="/matches/"]').text.strip().replace(",", "").split(" ")[1::])
         info_obj.match_date = datetime.strptime(data, "%B %d %Y")
     except Exception as e:
-        print(f"match_date alınamadı: {e}")
+        logger.warning(f"match_date could not be parsed: {e}")
         info_obj.match_date = None
 
     # League
     try:
         info_obj.league = scorebox_meta.select_one('a[href*="/comps/"]').text.strip()
     except Exception as e:
-        print(f"league alınamadı: {e}")
+        logger.warning(f"league could not be parsed: {e}")
         info_obj.league = None
 
     try:
@@ -97,9 +100,9 @@ async def match_general_info_scraper(page ,url: str) -> GeneralMatchInfo:
                     if spans:
                         info_obj.referee = spans[0].text.strip().replace("\xa0", " ").replace("(Referee)", "").strip()
             except Exception as e:
-                print(f"{label} alınamadı: {e}")
+                logger.warning(f"Scorebox meta field '{label}' could not be parsed: {e}")
     except Exception as e:
-        print(f"Scorebox meta bilgileri alınamadı: {e}")
+        logger.warning(f"Scorebox meta section could not be parsed: {e}")
 
     home_team_html = scorebox.find('div', id='sb_team_0')
     away_team_html = scorebox.find('div', id='sb_team_1')
@@ -108,7 +111,7 @@ async def match_general_info_scraper(page ,url: str) -> GeneralMatchInfo:
     try:
         info_obj.home_name = home_team_html.select_one("a[href*='/squads/']").text.strip()
     except Exception as e:
-        print(f"home_name alınamadı: {e}")
+        logger.warning(f"home_name could not be parsed: {e}")
         info_obj.home_name = None
 
     # Home manager
@@ -118,7 +121,7 @@ async def match_general_info_scraper(page ,url: str) -> GeneralMatchInfo:
         datapoints = home_team_html.select('div[class="datapoint"]')
         info_obj.home_manager = datapoints[0].text.strip().replace("Manager: ", "").replace("\xa0", " ")
     except Exception as e:
-        print(f"home_manager alınamadı: {e}")
+        logger.warning(f"home_manager could not be parsed: {e}")
         info_obj.home_manager = None
 
     # Home captain
@@ -126,14 +129,14 @@ async def match_general_info_scraper(page ,url: str) -> GeneralMatchInfo:
         datapoints = home_team_html.select('div[class="datapoint"]')
         info_obj.home_captain = datapoints[1].select_one("a").text.strip().replace("\xa0", " ")
     except Exception as e:
-        print(f"home_captain alınamadı: {e}")
+        logger.warning(f"home_captain could not be parsed: {e}")
         info_obj.home_captain = None
 
     # Away team name
     try:
         info_obj.away_name = away_team_html.select_one("a[href*='/squads/']").text.strip()
     except Exception as e:
-        print(f"away_name alınamadı: {e}")
+        logger.warning(f"away_name could not be parsed: {e}")
         info_obj.away_name = None
 
     # Away manager
@@ -141,7 +144,7 @@ async def match_general_info_scraper(page ,url: str) -> GeneralMatchInfo:
         datapoints = away_team_html.select('div[class="datapoint"]')
         info_obj.away_manager = datapoints[0].text.strip().replace("Manager: ", "").replace("\xa0", " ")
     except Exception as e:
-        print(f"away_manager alınamadı: {e}")
+        logger.warning(f"away_manager could not be parsed: {e}")
         info_obj.away_manager = None
 
     # Away captain
@@ -149,7 +152,7 @@ async def match_general_info_scraper(page ,url: str) -> GeneralMatchInfo:
         datapoints = away_team_html.select('div[class="datapoint"]')
         info_obj.away_captain = datapoints[1].select_one("a").text.strip().replace("\xa0", " ")
     except Exception as e:
-        print(f"away_captain alınamadı: {e}")
+        logger.warning(f"away_captain could not be parsed: {e}")
         info_obj.away_captain = None
 
     # Scores
@@ -158,7 +161,7 @@ async def match_general_info_scraper(page ,url: str) -> GeneralMatchInfo:
         info_obj.home_goals = int(scores[0].text.strip())
         info_obj.away_goals = int(scores[1].text.strip())
     except Exception as e:
-        print(f"skorlar alınamadı: {e}")
+        logger.warning(f"scores could not be parsed: {e}")
         info_obj.home_goals = None
         info_obj.away_goals = None
 
@@ -168,7 +171,7 @@ async def match_general_info_scraper(page ,url: str) -> GeneralMatchInfo:
         home_goals_html = goals_html[0].select("div")
         info_obj.home_goal_scorers = goal_list_creator(home_goals_html)
     except Exception as e:
-        print(f"home_goal_scorers alınamadı: {e}")
+        logger.warning(f"home_goal_scorers could not be parsed: {e}")
         info_obj.home_goal_scorers = None
 
     # Away goal scorers
@@ -177,7 +180,7 @@ async def match_general_info_scraper(page ,url: str) -> GeneralMatchInfo:
         away_goals_html = goals_html[1].select("div")
         info_obj.away_goal_scorers = goal_list_creator(away_goals_html)
     except Exception as e:
-        print(f"away_goal_scorers alınamadı: {e}")
+        logger.warning(f"away_goal_scorers could not be parsed: {e}")
         info_obj.away_goal_scorers = None
 
     return info_obj

@@ -1,6 +1,10 @@
 import asyncio
 import nodriver as uc
 
+from core.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 async def start_browser(retries: int = 3, delay: float = 2.0, **kwargs):
 
@@ -10,7 +14,7 @@ async def start_browser(retries: int = 3, delay: float = 2.0, **kwargs):
             return await uc.start(**kwargs)
         except Exception as e:
             last_error = e
-            print(f"Tarayıcı başlatılamadı (deneme {attempt}/{retries}): {e}")
+            logger.error(f"Browser failed to start (attempt {attempt}/{retries}): {e}")
             if attempt < retries:
                 await asyncio.sleep(delay)
     raise last_error

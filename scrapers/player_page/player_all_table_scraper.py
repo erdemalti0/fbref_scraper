@@ -8,14 +8,17 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from core.player_page_types import AllStats
 from core.browser import start_browser
 from core.helper_functions import table_scraper
+from core.logger import get_logger
+
+logger = get_logger(__name__)
 
 async def all_stats_scraper(page):
     stats = AllStats()
     try:
-        print(f"Oyuncu verileri alınıyor")
+        logger.info("Scraping player stats tables")
         await page.select('div[id*="stats_player_summary_"]')
     except Exception as e:
-        print(f"Oyuncu verileri alınamadı {e}")
+        logger.warning(f"Player stats section could not be loaded: {e}")
 
     html_content = await page.get_content()
     soup = BeautifulSoup(html_content, "html.parser")
@@ -29,27 +32,27 @@ async def all_stats_scraper(page):
     try:
         table_scraper(standard_stats_html, "standard_stats", stats)
     except Exception as e:
-        print(f"Tablo alınamadı {e}")
+        logger.warning(f"'standard_stats' table could not be scraped: {e}")
 
     try:
         table_scraper(shooting_table_html, "shooting_table", stats)
     except Exception as e:
-        print(f"Tablo alınamadı {e}")
+        logger.warning(f"'shooting_table' table could not be scraped: {e}")
 
     try:
         table_scraper(playing_time_table_html, "playing_time_table", stats)
     except Exception as e:
-        print(f"Tablo alınamadı {e}")
+        logger.warning(f"'playing_time_table' table could not be scraped: {e}")
 
     try:
         table_scraper(miscellaneous_stats_table_html, "miscellaneous_stats_table", stats)
     except Exception as e:
-        print(f"Tablo alınamadı {e}")
+        logger.warning(f"'miscellaneous_stats_table' table could not be scraped: {e}")
 
     try:
         table_scraper(summary_table_html, "summary_table", stats)
     except Exception as e:
-        print(f"Tablo alınamadı {e}")
+        logger.warning(f"'summary_table' table could not be scraped: {e}")
 
     return stats
 

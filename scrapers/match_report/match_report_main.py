@@ -9,11 +9,14 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from core.browser import start_browser
 from core.storage import save_json
 from core.match_report_types import MatchReport
+from core.logger import get_logger
 from scrapers.match_report.match_report_scraper import match_general_info_scraper
 from scrapers.match_report.match_team_stats_scraper import team_stats_scraper
 from scrapers.match_report.match_event_scraper import match_events_scraper
 from scrapers.match_report.match_squad_scraper import match_squad_scraper
 from scrapers.match_report.match_player_stats_scraper import player_stats_scraper
+
+logger = get_logger(__name__)
 
 STORAGE_DIR = Path(__file__).resolve().parent.parent.parent / "storage"
 
@@ -28,7 +31,7 @@ async def scrape_page(page, url: str) -> MatchReport:
         except Exception:
             await asyncio.sleep(2)
     if not loaded:
-        raise RuntimeError(f"Sayfa tam yüklenemedi {url}")
+        raise RuntimeError(f"Page did not fully load {url}")
 
     report = MatchReport()
 
@@ -44,7 +47,7 @@ async def scrape_page(page, url: str) -> MatchReport:
         try:
             setattr(report, name, await coro)
         except Exception as e:
-            print(f"{name} alınamadı ({url}): {e}")
+            logger.error(f"Section '{name}' could not be scraped ({url}): {e}")
 
     return report
 
@@ -79,7 +82,7 @@ async def scrape_many(urls: list[str], delay: float = 3.0) -> list[MatchReport]:
                 save_report(report)
                 reports.append(report)
             except Exception as e:
-                print(f"Maç alınamadı ({url}): {e}")
+                logger.error(f"Match could not be scraped ({url}): {e}")
 
         return reports
     finally:

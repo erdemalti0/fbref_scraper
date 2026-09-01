@@ -9,6 +9,9 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from core.match_report_types import PlayerStats, MatchPlayerStats
 from core.browser import start_browser
 from core.helper_functions import column_name_scraper, row_scraper, column_description_mapper
+from core.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 async def player_stats_scraper(page):
@@ -16,10 +19,10 @@ async def player_stats_scraper(page):
     match_player_stats = MatchPlayerStats()
 
     try:
-        print("Scraping player stats")
+        logger.info("Scraping player stats")
         await page.select('table[class="stats_table sortable now_sortable"]')
     except Exception as e:
-        raise RuntimeError(f"Oyuncu istatistik tablosu alınamadı {e}")
+        raise RuntimeError(f"Player stats table could not be loaded: {e}")
 
     html_content = await page.get_content()
     soup = BeautifulSoup(html_content, "html.parser")
@@ -44,7 +47,7 @@ async def player_stats_scraper(page):
                 match_player_stats.home_stats = row_scraper(home_rows, column_names)
                 match_player_stats.away_stats = row_scraper(away_rows, column_names)
             except Exception as e:
-                print(e)
+                logger.warning(f"Player stat rows could not be parsed: {e}")
 
 
     if len(goalkeeper_tables) > 1:
@@ -64,9 +67,9 @@ async def player_stats_scraper(page):
                 match_player_stats.home_goalkeeper_stats = row_scraper(home_rows, column_names)
                 match_player_stats.away_goalkeeper_stats = row_scraper(away_rows, column_names)
             except Exception as e:
-                print(e)
+                logger.warning(f"Goalkeeper stat rows could not be parsed: {e}")
         else:
-            print("Kalece tabloları alınamadı")
+            logger.warning("Goalkeeper table header could not be found")
 
 
     return match_player_stats

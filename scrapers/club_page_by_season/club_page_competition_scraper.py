@@ -9,6 +9,9 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 from core.browser import start_browser
 from core.helper_functions import column_name_scraper, table_scraper
 from core.club_page_by_season_types import ClubCompetition
+from core.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 def comp_matches(row_comp, competition_name) -> bool:
@@ -23,10 +26,10 @@ async def competition_scraper(page, competition_name) -> ClubCompetition | None:
     )
 
     try:
-        print("Turnuva bilgisi alınıyor")
+        logger.info(f"Scraping competition: {competition_name}")
         await page.wait_for('table[id*="stats_misc_"]')
     except Exception as e:
-        print(f"Hata {e}")
+        logger.warning(f"Competition stats table could not be loaded for '{competition_name}': {e}")
 
     html_content = await page.get_content()
     soup = BeautifulSoup(html_content, 'html.parser')
@@ -35,10 +38,9 @@ async def competition_scraper(page, competition_name) -> ClubCompetition | None:
     if scores_and_fixtures_html:
         try:
             table_scraper(scores_and_fixtures_html, "scoring_and_fixture", club, "fixture")
-            print(club)
+            logger.debug(club)
         except Exception as e:
-            column_names = None
-            print(f"Kolon isimleri alınamadı {e}")
+            logger.warning(f"Fixtures table could not be scraped for '{competition_name}': {e}")
 
     if club.scoring_and_fixture and competition_name != "All Competitions":
         filtered_rows = [
@@ -53,36 +55,35 @@ async def competition_scraper(page, competition_name) -> ClubCompetition | None:
         try:
             table_scraper(standard_stats_html, "standard_stats", club)
         except Exception as e:
-            column_names = None
-            print(f"Kolon isimleri alınamadı")
+            logger.warning(f"'standard_stats' table could not be scraped for '{competition_name}': {e}")
 
     goalkeeping_stats_html = soup.select_one('table[id*="stats_keeper_"]')
     if goalkeeping_stats_html:
         try:
             table_scraper(goalkeeping_stats_html, "goalkeeping_stats", club)
         except Exception as e:
-            print(f"Kolon isimleri alınamadı")
+            logger.warning(f"'goalkeeping_stats' table could not be scraped for '{competition_name}': {e}")
 
     shooting_stats_html = soup.select_one('table[id*="stats_shooting_"]')
     if shooting_stats_html:
         try:
             table_scraper(shooting_stats_html, "shooting_stats", club)
         except Exception as e:
-            print(f"Kolon isimleri alınamadı")
+            logger.warning(f"'shooting_stats' table could not be scraped for '{competition_name}': {e}")
 
     playing_time_stats_html = soup.select_one('table[id*="stats_playing_time_"]')
     if playing_time_stats_html:
         try:
             table_scraper(playing_time_stats_html, "playing_time", club)
         except Exception as e:
-            print(f"Kolon isimleri alınamadı")
+            logger.warning(f"'playing_time' table could not be scraped for '{competition_name}': {e}")
 
     miscellaneous_stats_html = soup.select_one('table[id*="stats_misc_"]')
     if miscellaneous_stats_html:
         try:
             table_scraper(miscellaneous_stats_html, "miscellaneous_stats", club)
         except Exception as e:
-            print(f"Kolon isimleri alınamadı")
+            logger.warning(f"'miscellaneous_stats' table could not be scraped for '{competition_name}': {e}")
 
     return club
 

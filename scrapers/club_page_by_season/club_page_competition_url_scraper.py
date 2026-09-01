@@ -7,14 +7,17 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.browser import start_browser
 from core.club_page_by_season_types import CompetitionUrl
+from core.logger import get_logger
+
+logger = get_logger(__name__)
 
 async def competition_url_scraper(page, url) -> list[CompetitionUrl] | None :
 
     try:
-        print("Turnuva bilgileri alınıyor")
+        logger.info("Scraping competition urls")
         await page.wait_for('div[class="filter"]')
     except Exception as e:
-        print(f"Turnuva bilgisi alınamadı {e}")
+        logger.warning(f"Competition filter section could not be loaded: {e}")
         return None
 
     result = []
@@ -43,7 +46,7 @@ async def competition_url_scraper(page, url) -> list[CompetitionUrl] | None :
 
                 result.append(obj)
         except Exception as e:
-            print(f"Hata {e}")
+            logger.warning(f"Competition urls could not be parsed: {e}")
 
         return result
 
@@ -54,7 +57,7 @@ async def main():
         page = await browser.get(url)
         await competition_url_scraper(page, url)
     except Exception as e:
-        print(f"Turnuva bilgisi alınamadı {e}")
+        logger.error(f"Competition urls could not be scraped: {e}")
     finally:
         browser.stop()
 

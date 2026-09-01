@@ -9,10 +9,13 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.browser import start_browser
 from core.club_page_by_season_types import ClubInfo
+from core.logger import get_logger
+
+logger = get_logger(__name__)
 
 async def club_info_scraper(page, url):
     club = ClubInfo()
-    print("Kulüp bilgileri alınıyor")
+    logger.info("Scraping club info")
     loaded = False
     for attempt in range(3):
         try:
@@ -22,7 +25,7 @@ async def club_info_scraper(page, url):
         except Exception:
             await asyncio.sleep(2)
     if not loaded:
-        raise RuntimeError("Kulüp bilgileri alınamadı")
+        raise RuntimeError("Club info section could not be loaded")
 
     html_content = await page.get_content()
     soup = BeautifulSoup(html_content, 'html.parser')
@@ -31,7 +34,7 @@ async def club_info_scraper(page, url):
         id_match = re.search(r"/([0-9a-f]{8})(?:/|$)", url)
         club.club_id = id_match.group(1) if id_match else None
     except Exception as e:
-        print(f"club_id alınamadı: {e}")
+        logger.warning(f"club_id could not be parsed: {e}")
         club.club_id = None
 
     info = soup.select_one('div[data-template="Partials/Teams/Summary"]')
@@ -43,12 +46,12 @@ async def club_info_scraper(page, url):
             try:
                 club.season = texts[0]
             except Exception as e:
-                print(f"Sezon bilgisi alınamadı {e}")
+                logger.warning(f"Season could not be parsed: {e}")
 
             try:
                 club.club_name = " ".join(texts[1:texts.index("Stats")]) if "Stats" in texts else " ".join(texts[1:])
             except Exception as e:
-                print(f"Kulüp ismi alınamadı {e}")
+                logger.warning(f"Club name could not be parsed: {e}")
 
         paragraphs = info.select('p')
         for p in paragraphs:
@@ -57,7 +60,7 @@ async def club_info_scraper(page, url):
                 if strong and strong.text.strip() == "Governing Country:":
                     club.country_name = p.select_one("a").text.strip()
             except Exception as e:
-                print(f"Ülke bilgisi alınamadı {e}")
+                logger.warning(f"Country could not be parsed: {e}")
     return club
 
 async def main():

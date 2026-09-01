@@ -7,11 +7,14 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.match_report_types import Events, Substitution, CardEvent, GoalInfo, MissedPenalty, normalize_minute
 from core.browser import start_browser
+from core.logger import get_logger
+
+logger = get_logger(__name__)
 
 def parse_event(event_div):
     info_div = event_div.select('div')[1]
     if not info_div:
-        print("Event bilgisi alınamadı")
+        logger.warning("Event info block could not be found")
         return None
 
     try:
@@ -20,7 +23,7 @@ def parse_event(event_div):
         minute = normalize_minute(minute.replace("\xa0", ""))
     except Exception as e:
         minute = None
-        print(f"Dakika bilgisi alınamadı {e}")
+        logger.warning(f"Event minute could not be parsed: {e}")
 
     players = info_div.select("a")
     icon = info_div.select_one("div[class*='event_icon']")
@@ -83,10 +86,10 @@ def parse_event(event_div):
 async def match_events_scraper(page):
 
     try:
-        print("Scrapping events")
+        logger.info("Scraping events")
         await page.select('div[id="events_wrap"]')
     except Exception:
-        raise RuntimeError("Olaylar alınamadı")
+        raise RuntimeError("Events section could not be loaded")
 
     events = Events()
 
@@ -96,20 +99,20 @@ async def match_events_scraper(page):
     event_section = soup.select_one('div[id="events_wrap"]')
 
     if not event_section:
-        raise RuntimeError("Event alanı bulunamadı")
+        raise RuntimeError("Events section not found in page")
 
     home_events_list = event_section.select('div[class="event a"]')
     away_events_list = event_section.select('div[class="event b"]')
 
     if not home_events_list:
-        print("Ev sahibi eventleri alınamadı.")
+        logger.warning("No home team events found")
     else:
         home_events = []
         for event in home_events_list:
             try:
                 event_obj = parse_event(event)
             except Exception as e:
-                print(f"Event alınamadı {e}")
+                logger.warning(f"Home event could not be parsed: {e}")
                 continue
             if event_obj:
                 home_events.append(event_obj)
@@ -118,14 +121,14 @@ async def match_events_scraper(page):
             events.home_events = home_events
 
     if not away_events_list:
-        print("Deplasman eventleri alınamadı")
+        logger.warning("No away team events found")
     else:
         away_events = []
         for event in away_events_list:
             try:
                 event_obj = parse_event(event)
             except Exception as e:
-                print(f"Event alınamadı {e}")
+                logger.warning(f"Away event could not be parsed: {e}")
                 continue
             if event_obj:
                 away_events.append(event_obj)

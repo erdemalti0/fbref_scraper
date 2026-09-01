@@ -4,3 +4,4 @@ __pycache__/
 .idea/
 downloaded_files/
 storage/
+logs/

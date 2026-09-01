@@ -9,6 +9,9 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.player_page_types import PlayerInfo
 from core.browser import start_browser
+from core.logger import get_logger
+
+logger = get_logger(__name__)
 
 KNOWN_LABELS = ("Position:", "Born:", "National Team:", "Club:", "Wages:", "Also Played As:", "Instagram:", "Twitter:", "Facebook:")
 
@@ -19,13 +22,13 @@ async def player_info_scraper(page, url) -> PlayerInfo | None:
         id_match = re.search(r"/([0-9a-f]{8})(?:/|$)", url)
         player_obj.player_id = id_match.group(1) if id_match else None
     except Exception as e:
-        print(f"Oyuncu id si alınamadı: {e}")
+        logger.warning(f"player_id could not be parsed: {e}")
 
     try:
-        print("Oyuncu bilgileri alınıyor")
+        logger.info("Scraping player info")
         await page.select('div[id="meta"]')
     except Exception as e:
-        print(f"Oyuncu bilgileri alınamadı {e}")
+        logger.warning(f"Player meta section could not be loaded: {e}")
 
     html_content = await page.get_content()
     soup = BeautifulSoup(html_content, "html.parser")
@@ -35,7 +38,7 @@ async def player_info_scraper(page, url) -> PlayerInfo | None:
         try:
             player_obj.player_name = meta_html.select_one('h1').text.strip()
         except Exception as e:
-            print(f"Oyuncu ismi alınamadı {e}")
+            logger.warning(f"Player name could not be parsed: {e}")
 
         others = [p for p in meta_html.select('p') if p.text.strip()]
 
@@ -44,7 +47,7 @@ async def player_info_scraper(page, url) -> PlayerInfo | None:
             try:
                 player_obj.player_full_name = full_name_ps[0].text.strip()
             except Exception as e:
-                print(f"Tam isim alınamadı {e}")
+                logger.warning(f"Player full name could not be parsed: {e}")
 
         position_p = next((p for p in others if "Position:" in p.text), None)
         if position_p:
@@ -52,19 +55,19 @@ async def player_info_scraper(page, url) -> PlayerInfo | None:
                 position_text = position_p.text.strip().replace("Position:", "").split("▪")[0]
                 player_obj.player_position = position_text.replace("\xa0", " ").strip()
             except Exception as e:
-                print(f"Oyuncu pozisyonu alınamadı {e}")
+                logger.warning(f"Player position could not be parsed: {e}")
 
         physical_p = next((p for p in others if "cm" in p.text), None)
         if physical_p:
             try:
                 player_obj.player_height = int("".join([i for i in physical_p.select("span")[0].text.strip() if i.isdigit()]))
             except Exception as e:
-                print(f"Oyuncu boyu alınamadı {e}")
+                logger.warning(f"Player height could not be parsed: {e}")
 
             try:
                 player_obj.player_weight = int("".join([i for i in physical_p.select("span")[1].text.strip() if i.isdigit()]))
             except Exception as e:
-                print(f"Oyuncu kilosu alınamadı {e}")
+                logger.warning(f"Player weight could not be parsed: {e}")
 
         born_p = next((p for p in others if "Born:" in p.text), None)
         if born_p:
@@ -72,13 +75,13 @@ async def player_info_scraper(page, url) -> PlayerInfo | None:
                 data = born_p.select("span")[0].text.strip().replace(",", "")
                 player_obj.player_birth_date = datetime.strptime(data, "%B %d %Y")
             except Exception as e:
-                print(f"Oyuncu doğum günü alınamadı {e}")
+                logger.warning(f"Player birth date could not be parsed: {e}")
 
             try:
                 place_match = re.search(r"\bin\s+([^\n]+)", born_p.text)
                 player_obj.player_born_place = place_match.group(1).strip() if place_match else None
             except Exception as e:
-                print(f"Oyuncu doğum yeri alınamadı {e}")
+                logger.warning(f"Player birth place could not be parsed: {e}")
 
         national_p = next((p for p in others if "National Team:" in p.text), None)
         if national_p:
@@ -90,7 +93,7 @@ async def player_info_scraper(page, url) -> PlayerInfo | None:
                 else:
                     player_obj.player_national_team = data[0].text.strip()
             except Exception as e:
-                print(f"Oyuncu milli takım bilgisi alınamadı {e}")
+                logger.warning(f"Player national team could not be parsed: {e}")
 
     return player_obj
 

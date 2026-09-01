@@ -1,6 +1,10 @@
 import json
 from pathlib import Path
 
+from core.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 def save_json(model, storage_dir: Path, report_id: str | None, fallback_prefix: str) -> Path | None:
     storage_dir.mkdir(parents=True, exist_ok=True)
@@ -16,5 +20,5 @@ def save_json(model, storage_dir: Path, report_id: str | None, fallback_prefix: 
         json.dumps(model.model_dump(mode="json"), ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
-    print(f"Rapor kaydedildi: {path}")
+    logger.info(f"Report saved: {path}")
     return path

@@ -10,9 +10,12 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.browser import start_browser
 from core.storage import save_json
+from core.logger import get_logger
 from scrapers.club_page_by_season.club_info_scraper import club_info_scraper
 from scrapers.club_page_by_season.club_page_competition_url_scraper import competition_url_scraper
 from scrapers.club_page_by_season.club_page_competition_scraper import competition_scraper
+
+logger = get_logger(__name__)
 
 STORAGE_DIR = Path(__file__).resolve().parent.parent.parent / "storage/clubs"
 
@@ -28,7 +31,7 @@ async def scrape_page(page, url):
         except Exception:
             await asyncio.sleep(2)
     if not loaded:
-        raise RuntimeError(f"Sayfa tam yüklenemedi {url}")
+        raise RuntimeError(f"Page did not fully load {url}")
 
     club = ClubPageBySeason()
 
@@ -43,7 +46,7 @@ async def scrape_page(page, url):
                 competition = await competition_scraper(page, u.competition_name)
                 competitions.append(competition)
             except Exception as e:
-                print(f"Turnuva bilgisi alınamadı {e}")
+                logger.error(f"Competition '{u.competition_name}' could not be scraped: {e}")
 
     if competitions:
         club.competitions = competitions
@@ -54,7 +57,7 @@ async def scrape_page(page, url):
         if info:
             club.club_info = info
     except Exception as e:
-        print(f"Club info alınamadı {e}")
+        logger.error(f"Club info could not be scraped: {e}")
 
 
     return club

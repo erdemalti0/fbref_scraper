@@ -1,7 +1,10 @@
 from core.match_report_types import PlayerStats
 from core.club_page_by_season_types import FixtureRow
+from core.logger import get_logger
 from typing import Literal
 import re
+
+logger = get_logger(__name__)
 
 def parse_cell_value(text: str):
     if not text:
@@ -39,7 +42,7 @@ def column_name_scraper(content) -> list:
 
                 col_description = column_description
             except Exception as e:
-                print(f"Column description error: {e}")
+                logger.warning(f"Column description could not be parsed: {e}")
 
             col_obj = {
                 "column_name": col_name,
@@ -49,7 +52,7 @@ def column_name_scraper(content) -> list:
             names.append(col_obj)
 
     except Exception as e:
-        print(f"Kolon isimleri alınamadı")
+        logger.warning(f"Column names could not be scraped: {e}")
 
     return names
 
@@ -92,7 +95,7 @@ def table_scraper(content, table_name, obj, return_type: Literal["player", "fixt
                 column_names = column_name_scraper(cols[-1])
         except Exception as e:
             column_names = None
-            print(f"Standard stats alınamadı {e}")
+            logger.warning(f"Table header could not be scraped for '{table_name}': {e}")
 
         if column_names:
             try:
@@ -101,7 +104,7 @@ def table_scraper(content, table_name, obj, return_type: Literal["player", "fixt
                 setattr(obj, table_name+"_col_descriptions", column_descriptions)
             except Exception as e:
                 rows = None
-                print(e)
+                logger.warning(f"Table body could not be scraped for '{table_name}': {e}")
 
             if rows:
                 try:
@@ -114,7 +117,7 @@ def table_scraper(content, table_name, obj, return_type: Literal["player", "fixt
 
                     setattr(obj, table_name, result)
                 except Exception as e:
-                    print(f"Satır alınamadı {e}")
+                    logger.warning(f"Rows could not be scraped for '{table_name}': {e}")
 
         tfoot_html = content.select_one("tfoot")
         if tfoot_html:
@@ -137,17 +140,17 @@ def table_scraper(content, table_name, obj, return_type: Literal["player", "fixt
                 column_names = column_name_scraper(trs[0])
             except Exception as e:
                 column_names = None
-                pass
+                logger.warning(f"Footer column names could not be scraped for '{table_name}': {e}")
             if column_names:
                 try:
                     rows = trs[1::]
                 except Exception as e:
                     rows = None
-                    print(f"Satırlar alınamadı {e}")
+                    logger.warning(f"Footer rows could not be scraped for '{table_name}': {e}")
 
                 if rows:
                     try:
                         result = row_scraper(rows, column_names)
                         setattr(obj, table_name+"_by_club_and_league", result)
                     except Exception as e:
-                        print("Tablo alınamadı")
+                        logger.warning(f"Footer table could not be scraped for '{table_name}': {e}")

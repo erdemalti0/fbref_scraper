@@ -7,6 +7,9 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.match_report_types import MatchSquad, PlayerInfo
 from core.browser import start_browser
+from core.logger import get_logger
+
+logger = get_logger(__name__)
 
 def parse_squad(table_rows):
     starting_eleven = []
@@ -27,7 +30,7 @@ def parse_squad(table_rows):
 
             starting_eleven.append(player_obj)
         except Exception as e:
-            print(f"Oyuncu verisi çekme başarısız: {e}")
+            logger.warning(f"Starting eleven player could not be parsed: {e}")
 
         i += 1
 
@@ -43,7 +46,7 @@ def parse_squad(table_rows):
 
             bench.append(player_obj)
         except Exception as e:
-            print(f"Oyuncu verisi çekme başarısız: {e}")
+            logger.warning(f"Bench player could not be parsed: {e}")
 
         i += 1
 
@@ -62,29 +65,29 @@ async def match_squad_scraper(page) -> MatchSquad:
     squad_obj = MatchSquad()
 
     try:
-        print("Scrapping Squad")
+        logger.info("Scraping squad")
         await page.wait_for('div[class="lineup"]')
     except Exception:
-        raise RuntimeError("Kadrolar alınamadı")
+        raise RuntimeError("Squad section could not be loaded")
 
     html_content = await page.get_content()
     soup = BeautifulSoup(html_content, "html.parser")
 
     lineup_divs = soup.select('div[class="lineup"]')
     if not lineup_divs:
-        raise RuntimeError("Kadro alanı bulunamadı")
+        raise RuntimeError("Squad section not found in page")
 
     # Home squad
     try:
         squad_obj.home_formation, squad_obj.home_starting_eleven, squad_obj.home_bench = parse_lineup(lineup_divs[0])
     except Exception as e:
-        print(f"home kadro alınamadı: {e}")
+        logger.warning(f"Home squad could not be parsed: {e}")
 
     # Away squad
     try:
         squad_obj.away_formation, squad_obj.away_starting_eleven, squad_obj.away_bench = parse_lineup(lineup_divs[1])
     except Exception as e:
-        print(f"away kadro alınamadı: {e}")
+        logger.warning(f"Away squad could not be parsed: {e}")
 
     return squad_obj
 
