@@ -7,8 +7,8 @@ import nodriver as uc
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.browser import start_browser
-from core.storage import save_json
-from core.match_report_types import MatchReport
+from core.storage import save
+from models.match_report_types import MatchReport
 from core.logger import get_logger
 from scrapers.match_report.match_report_scraper import match_general_info_scraper
 from scrapers.match_report.match_team_stats_scraper import team_stats_scraper
@@ -19,6 +19,7 @@ from scrapers.match_report.match_player_stats_scraper import player_stats_scrape
 logger = get_logger(__name__)
 
 STORAGE_DIR = Path(__file__).resolve().parent.parent.parent / "storage"
+TABLE_NAME = "match_reports"
 
 
 async def scrape_page(page, url: str) -> MatchReport:
@@ -52,23 +53,23 @@ async def scrape_page(page, url: str) -> MatchReport:
     return report
 
 
-def save_report(report: MatchReport) -> Path | None:
+def save_report(report: MatchReport, storage_type: str = "json") -> Path | None:
     match_id = report.general_info.match_id if report.general_info else None
-    return save_json(report, STORAGE_DIR, match_id, "match")
+    return save(report, STORAGE_DIR, match_id, "match", TABLE_NAME, storage_type)
 
 
-async def scrape_match_report(url: str, headless: bool = False) -> MatchReport:
+async def scrape_match_report(url: str, headless: bool = False, storage_type: str = "json") -> MatchReport:
     browser = await start_browser(headless=headless)
     try:
         page = await browser.get(url)
         report = await scrape_page(page, url)
-        save_report(report)
+        save_report(report, storage_type)
         return report
     finally:
         browser.stop()
 
 
-async def scrape_many(urls: list[str], delay: float = 3.0, headless: bool = False) -> list[MatchReport]:
+async def scrape_many(urls: list[str], delay: float = 3.0, headless: bool = False, storage_type: str = "json") -> list[MatchReport]:
     browser = await start_browser(headless=headless)
     try:
         reports = []
@@ -79,7 +80,7 @@ async def scrape_many(urls: list[str], delay: float = 3.0, headless: bool = Fals
             try:
                 page = await browser.get(url)
                 report = await scrape_page(page, url)
-                save_report(report)
+                save_report(report, storage_type)
                 reports.append(report)
             except Exception as e:
                 logger.error(f"Match could not be scraped ({url}): {e}")

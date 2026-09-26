@@ -7,7 +7,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.browser import start_browser
-from core.league_page_types import LeagueInfo
+from models.league_page_types import LeagueInfo
 from core.logger import get_logger
 
 logger = get_logger(__name__)

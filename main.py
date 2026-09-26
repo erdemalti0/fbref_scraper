@@ -31,31 +31,39 @@ def str2bool(v):
         return True
     if s in FALSE_VALUES:
         return False
-    raise argparse.ArgumentTypeError(f"true/false bekleniyordu, gelen: {v!r}")
-
+    raise argparse.ArgumentTypeError(f"expected true/false, got: {v!r}")
 
 def main():
-    parser = argparse.ArgumentParser(description="fbref.com veri kazıyıcı")
-    parser.add_argument("type", choices=SCRAPERS.keys(), help="kazınacak sayfa tipi")
-    parser.add_argument("url", help="fbref.com sayfa linki")
-    parser.add_argument("headless", nargs="?", default=None,
-                        type=str2bool, help="true/false, boş ise .env'deki HEADLESS kullanılır")
-
+    parser = argparse.ArgumentParser(description="fbref.com data scraper")
+    parser.add_argument("type", choices=SCRAPERS.keys(), help="page type to scrape")
+    parser.add_argument("url", help="fbref.com page URL")
+    parser.add_argument("--headless", nargs="?", default=None, const=True,
+                        type=str2bool, help="true/false, if omitted the HEADLESS value from .env is used")
+    parser.add_argument("--storage_type", type=lambda s: s.lower().strip(),
+                        choices=["json", "postgresql", "both"], default=None)
     args = parser.parse_args()
 
     if "fbref.com" not in args.url:
-        parser.error("link fbref.com adresi olmalı")
+        parser.error("URL must be a fbref.com address")
 
     scrape_func, expected_path = SCRAPERS[args.type]
     if expected_path not in args.url:
-        parser.error(f"{args.type} tipi için link '{expected_path}' içermeli")
+        parser.error(f"URL for type '{args.type}' must contain '{expected_path}'")
 
     if args.headless is None:
-        headless = str(os.getenv("HEADLESS", "false")).lower() in TRUE_VALUES
+        headless = str(os.getenv("HEADLESS", "false")).lower().strip() in TRUE_VALUES
     else:
         headless = args.headless
 
-    uc.loop().run_until_complete(scrape_func(args.url, headless))
+    if args.storage_type is not None:
+        storage_type = args.storage_type
+    else:
+        storage_type = (os.getenv("STORAGE_TYPE", "json") or "json").lower().strip()
+
+    if storage_type not in ("json", "postgresql", "both"):
+        parser.error("Invalid storage type")
+
+    uc.loop().run_until_complete(scrape_func(args.url, headless, storage_type))
 
 
 if __name__ == "__main__":

@@ -4,12 +4,12 @@ from pathlib import Path
 
 import nodriver as uc
 
-from core.club_page_by_season_types import ClubPageBySeason
+from models.club_page_by_season_types import ClubPageBySeason
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.browser import start_browser
-from core.storage import save_json
+from core.storage import save
 from core.logger import get_logger
 from scrapers.club_page_by_season.club_info_scraper import club_info_scraper
 from scrapers.club_page_by_season.club_page_competition_url_scraper import competition_url_scraper
@@ -18,6 +18,7 @@ from scrapers.club_page_by_season.club_page_competition_scraper import competiti
 logger = get_logger(__name__)
 
 STORAGE_DIR = Path(__file__).resolve().parent.parent.parent / "storage/clubs"
+TABLE_NAME = "clubs"
 
 
 async def scrape_page(page, url):
@@ -62,16 +63,16 @@ async def scrape_page(page, url):
 
     return club
 
-def save_report(club: ClubPageBySeason) -> Path | None:
+def save_report(club: ClubPageBySeason, storage_type: str = "json") -> Path | None:
     club_id = club.club_info.club_id if club.club_info and club.club_info.club_id else None
-    return save_json(club, STORAGE_DIR, club_id, "club")
+    return save(club, STORAGE_DIR, club_id, "club", TABLE_NAME, storage_type)
 
-async def scrape_club_page(url: str, headless: bool = False) -> ClubPageBySeason:
+async def scrape_club_page(url: str, headless: bool = False, storage_type: str = "json") -> ClubPageBySeason:
     browser = await start_browser(headless=headless)
     try:
         page = await browser.get(url)
         club = await scrape_page(page, url)
-        save_report(club)
+        save_report(club, storage_type)
         return club
     finally:
         browser.stop()

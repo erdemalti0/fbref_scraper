@@ -7,7 +7,7 @@ from datetime import datetime
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-from core.player_page_types import PlayerInfo
+from models.player_page_types import PlayerInfo
 from core.browser import start_browser
 from core.logger import get_logger
 

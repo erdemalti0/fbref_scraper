@@ -14,6 +14,7 @@ dependencies = [
     "nodriver>=0.50.3",
     "pandas>=3.0.6",
     "playwright-stealth==1.0.6",
+    "psycopg[binary]>=3.3.6",
     "pydantic>=2.13.4",
     "python-dotenv>=1.2.3",
     "sqlalchemy>=2.1.1",

@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.browser import start_browser
-from core.club_page_by_season_types import CompetitionUrl
+from models.club_page_by_season_types import CompetitionUrl
 from core.logger import get_logger
 
 logger = get_logger(__name__)
@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 async def competition_url_scraper(page, url) -> list[CompetitionUrl] | None :
 
     try:
-        logger.info("Scraping competition urls")
+        logger.info("Scraping competition URLs")
         await page.wait_for('div[class="filter"]')
     except Exception as e:
         logger.warning(f"Competition filter section could not be loaded: {e}")
@@ -46,7 +46,7 @@ async def competition_url_scraper(page, url) -> list[CompetitionUrl] | None :
 
                 result.append(obj)
         except Exception as e:
-            logger.warning(f"Competition urls could not be parsed: {e}")
+            logger.warning(f"Competition URLs could not be parsed: {e}")
 
         return result
 
@@ -57,7 +57,7 @@ async def main():
         page = await browser.get(url)
         await competition_url_scraper(page, url)
     except Exception as e:
-        logger.error(f"Competition urls could not be scraped: {e}")
+        logger.error(f"Competition URLs could not be scraped: {e}")
     finally:
         browser.stop()
 
