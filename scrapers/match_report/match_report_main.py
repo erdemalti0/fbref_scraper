@@ -57,8 +57,8 @@ def save_report(report: MatchReport) -> Path | None:
     return save_json(report, STORAGE_DIR, match_id, "match")
 
 
-async def scrape_match_report(url: str) -> MatchReport:
-    browser = await start_browser()
+async def scrape_match_report(url: str, headless: bool = False) -> MatchReport:
+    browser = await start_browser(headless=headless)
     try:
         page = await browser.get(url)
         report = await scrape_page(page, url)
@@ -68,8 +68,8 @@ async def scrape_match_report(url: str) -> MatchReport:
         browser.stop()
 
 
-async def scrape_many(urls: list[str], delay: float = 3.0) -> list[MatchReport]:
-    browser = await start_browser()
+async def scrape_many(urls: list[str], delay: float = 3.0, headless: bool = False) -> list[MatchReport]:
+    browser = await start_browser(headless=headless)
     try:
         reports = []
         for i, url in enumerate(urls):

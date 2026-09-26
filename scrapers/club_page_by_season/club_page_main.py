@@ -66,8 +66,8 @@ def save_report(club: ClubPageBySeason) -> Path | None:
     club_id = club.club_info.club_id if club.club_info and club.club_info.club_id else None
     return save_json(club, STORAGE_DIR, club_id, "club")
 
-async def scrape_club_page(url: str) -> ClubPageBySeason:
-    browser = await start_browser()
+async def scrape_club_page(url: str, headless: bool = False) -> ClubPageBySeason:
+    browser = await start_browser(headless=headless)
     try:
         page = await browser.get(url)
         club = await scrape_page(page, url)

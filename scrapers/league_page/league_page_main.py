@@ -71,8 +71,8 @@ def save_report(league: LeaguePage) -> Path | None:
     report_id = f"{comp_id}_{season}" if comp_id and season else comp_id
     return save_json(league, STORAGE_DIR, report_id, "league")
 
-async def scrape_league_page(url: str) -> LeaguePage:
-    browser = await start_browser()
+async def scrape_league_page(url: str, headless: bool = False) -> LeaguePage:
+    browser = await start_browser(headless=headless)
     try:
         page = await browser.get(url)
         league = await scrape_page(page, url)

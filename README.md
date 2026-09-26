@@ -43,13 +43,15 @@ cd fbref_scraper
 uv sync
 ```
 
-Chrome must be installed on your machine (nodriver drives a real Chrome instance — headless mode does not work, fbref blocks headless browsers).
+Chrome must be installed on your machine (nodriver drives a real Chrome instance — headed mode (`HEADLESS=False`, the default) is recommended, fbref may block headless browsers).
 
 ## Usage
 
 ```bash
-python main.py <type> <url>
+python main.py <type> <url> [headless]
 ```
+
+Headless mode: pass `true`/`false` as the third argument (e.g. `python main.py match <url> true`). If omitted, the `HEADLESS` value from `.env` (`.env.local` overrides `.env`) is used; default is `False` (headed). Note: fbref may block headless browsers, so headed mode is recommended.
 
 | Type     | Description        | Example URL                                                            |
 |----------|--------------------|------------------------------------------------------------------------|

@@ -48,8 +48,8 @@ def save_report(player: PlayerPage) -> Path | None:
     player_id = player.info.player_id if player.info and player.info.player_id else None
     return save_json(player, STORAGE_DIR, player_id, "player")
 
-async def scrape_player_page(url: str) -> PlayerPage:
-    browser = await start_browser()
+async def scrape_player_page(url: str, headless: bool = False) -> PlayerPage:
+    browser = await start_browser(headless=headless)
     try:
         page = await browser.get(url)
         report = await scrape_page(page, url)
