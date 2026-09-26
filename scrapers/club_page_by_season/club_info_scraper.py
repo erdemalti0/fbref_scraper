@@ -8,7 +8,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.browser import start_browser
-from core.club_page_by_season_types import ClubInfo
+from types.club_page_by_season_types import ClubInfo
 from core.logger import get_logger
 
 logger = get_logger(__name__)

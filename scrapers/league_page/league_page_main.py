@@ -7,8 +7,8 @@ import nodriver as uc
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.browser import start_browser
-from core.storage import save_json
-from core.league_page_types import LeaguePage
+from core.storage import save
+from types.league_page_types import LeaguePage
 from core.logger import get_logger
 from scrapers.league_page.league_info_scraper import league_info_scraper
 from scrapers.league_page.league_standings_scraper import league_standings_scraper
@@ -19,6 +19,7 @@ from scrapers.league_page.league_leaders_scraper import league_leaders_scraper
 logger = get_logger(__name__)
 
 STORAGE_DIR = Path(__file__).resolve().parent.parent.parent / "storage/leagues"
+TABLE_NAME = "leagues"
 
 
 async def scrape_page(page, url):
@@ -65,18 +66,18 @@ async def scrape_page(page, url):
 
     return league
 
-def save_report(league: LeaguePage) -> Path | None:
+def save_report(league: LeaguePage, storage_type: str = "json") -> Path | None:
     comp_id = league.league_info.comp_id if league.league_info and league.league_info.comp_id else None
-    season = league.league_info.season if league.league_info and league.league_info.season else None
+    season = league.league_info.season if league.league_info else None
     report_id = f"{comp_id}_{season}" if comp_id and season else comp_id
-    return save_json(league, STORAGE_DIR, report_id, "league")
+    return save(league, STORAGE_DIR, report_id, "league", TABLE_NAME, storage_type)
 
-async def scrape_league_page(url: str, headless: bool = False) -> LeaguePage:
+async def scrape_league_page(url: str, headless: bool = False, storage_type: str = "json") -> LeaguePage:
     browser = await start_browser(headless=headless)
     try:
         page = await browser.get(url)
         league = await scrape_page(page, url)
-        save_report(league)
+        save_report(league, storage_type)
         return league
     finally:
         browser.stop()

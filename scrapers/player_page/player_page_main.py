@@ -7,8 +7,8 @@ import nodriver as uc
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.browser import start_browser
-from core.storage import save_json
-from core.player_page_types import PlayerPage
+from core.storage import save
+from types.player_page_types import PlayerPage
 from core.logger import get_logger
 from scrapers.player_page.player_info_scraper import player_info_scraper
 from scrapers.player_page.player_all_table_scraper import all_stats_scraper
@@ -16,6 +16,7 @@ from scrapers.player_page.player_all_table_scraper import all_stats_scraper
 logger = get_logger(__name__)
 
 STORAGE_DIR = Path(__file__).resolve().parent.parent.parent / "storage/players"
+TABLE_NAME = "players"
 
 async def scrape_page(page, url):
     loaded = False
@@ -44,16 +45,16 @@ async def scrape_page(page, url):
 
     return player
 
-def save_report(player: PlayerPage) -> Path | None:
+def save_report(player: PlayerPage, storage_type: str = "json") -> Path | None:
     player_id = player.info.player_id if player.info and player.info.player_id else None
-    return save_json(player, STORAGE_DIR, player_id, "player")
+    return save(player, STORAGE_DIR, player_id, "player", TABLE_NAME, storage_type)
 
-async def scrape_player_page(url: str, headless: bool = False) -> PlayerPage:
+async def scrape_player_page(url: str, headless: bool = False, storage_type: str = "json") -> PlayerPage:
     browser = await start_browser(headless=headless)
     try:
         page = await browser.get(url)
         report = await scrape_page(page, url)
-        save_report(report)
+        save_report(report, storage_type)
         return report
     finally:
         browser.stop()

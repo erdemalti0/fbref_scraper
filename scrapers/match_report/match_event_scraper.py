@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-from core.match_report_types import Events, Substitution, CardEvent, GoalInfo, MissedPenalty, normalize_minute
+from types.match_report_types import Events, Substitution, CardEvent, GoalInfo, MissedPenalty, normalize_minute
 from core.browser import start_browser
 from core.logger import get_logger
 

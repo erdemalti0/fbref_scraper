@@ -8,7 +8,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.browser import start_browser
 from core.helper_functions import table_scraper
-from core.league_page_types import LeaguePage
+from types.league_page_types import LeaguePage
 from core.logger import get_logger
 
 logger = get_logger(__name__)
