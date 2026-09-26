@@ -33,14 +33,14 @@ def str2bool(v):
         return False
     raise argparse.ArgumentTypeError(f"true/false bekleniyordu, gelen: {v!r}")
 
-
 def main():
     parser = argparse.ArgumentParser(description="fbref.com veri kazıyıcı")
     parser.add_argument("type", choices=SCRAPERS.keys(), help="kazınacak sayfa tipi")
     parser.add_argument("url", help="fbref.com sayfa linki")
-    parser.add_argument("headless", nargs="?", default=None,
+    parser.add_argument("--headless", nargs="?", default=None, const=True,
                         type=str2bool, help="true/false, boş ise .env'deki HEADLESS kullanılır")
-
+    parser.add_argument("--storage_type", type=lambda s: s.lower().strip(),
+                        choices=["json", "postgresql", "both"], default=None)
     args = parser.parse_args()
 
     if "fbref.com" not in args.url:
@@ -51,11 +51,19 @@ def main():
         parser.error(f"{args.type} tipi için link '{expected_path}' içermeli")
 
     if args.headless is None:
-        headless = str(os.getenv("HEADLESS", "false")).lower() in TRUE_VALUES
+        headless = str(os.getenv("HEADLESS", "false")).lower().strip() in TRUE_VALUES
     else:
         headless = args.headless
 
-    uc.loop().run_until_complete(scrape_func(args.url, headless))
+    if args.storage_type is not None:
+        storage_type = args.storage_type
+    else:
+        storage_type = (os.getenv("STORAGE_TYPE", "json") or "json").lower().strip()
+
+    if storage_type not in ("json", "postgresql", "both"):
+        parser.error("Storage type yanlış")
+
+    uc.loop().run_until_complete(scrape_func(args.url, headless, storage_type))
 
 
 if __name__ == "__main__":
