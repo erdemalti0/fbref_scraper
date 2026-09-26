@@ -78,7 +78,7 @@ def save(
     storage_type: str = "json",
     connection_string: str | None = None,
 ) -> Path | None:
-    """storage_type'a göre kaydet: 'json' | 'postgresql' | 'both'."""
+    """Save according to storage_type: 'json' | 'postgresql' | 'both'."""
     storage_type = (storage_type or "json").lower().strip()
     if storage_type not in ("json", "postgresql", "both"):
         raise ValueError(f"Unknown storage_type: {storage_type!r}")
@@ -92,7 +92,7 @@ def save(
     if storage_type in ("postgresql", "both"):
         conn_str = connection_string or os.getenv("DB_CONNECTION_STRING")
         if not conn_str:
-            logger.error("DB_CONNECTION_STRING bulunamadı, PostgreSQL'e kaydedilemedi")
+            logger.error("DB_CONNECTION_STRING is not set, skipping PostgreSQL save")
         else:
             save_postgresql(conn_str, table_name, model, report_id)
 

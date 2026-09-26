@@ -9,7 +9,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.browser import start_browser
 from core.helper_functions import column_name_scraper, row_scraper, column_description_mapper
-from types.league_page_types import StandingsTable, TableRow
+from models.league_page_types import StandingsTable, TableRow
 from core.logger import get_logger
 
 logger = get_logger(__name__)

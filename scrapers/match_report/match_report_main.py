@@ -8,7 +8,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.browser import start_browser
 from core.storage import save
-from types.match_report_types import MatchReport
+from models.match_report_types import MatchReport
 from core.logger import get_logger
 from scrapers.match_report.match_report_scraper import match_general_info_scraper
 from scrapers.match_report.match_team_stats_scraper import team_stats_scraper

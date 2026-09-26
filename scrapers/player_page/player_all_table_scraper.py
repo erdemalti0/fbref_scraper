@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-from types.player_page_types import AllStats
+from models.player_page_types import AllStats
 from core.browser import start_browser
 from core.helper_functions import table_scraper
 from core.logger import get_logger

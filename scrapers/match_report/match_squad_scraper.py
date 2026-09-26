@@ -5,7 +5,7 @@ import nodriver as uc
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-from types.match_report_types import MatchSquad, PlayerInfo
+from models.match_report_types import MatchSquad, PlayerInfo
 from core.browser import start_browser
 from core.logger import get_logger
 
@@ -98,7 +98,6 @@ async def main():
 
         page = await browser.get(url)
         squad = await match_squad_scraper(page)
-        #print(squad)
     finally:
         browser.stop()
 

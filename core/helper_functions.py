@@ -1,5 +1,5 @@
-from types.match_report_types import PlayerStats
-from types.club_page_by_season_types import FixtureRow
+from models.match_report_types import PlayerStats
+from models.club_page_by_season_types import FixtureRow
 from core.logger import get_logger
 from typing import Literal
 import re

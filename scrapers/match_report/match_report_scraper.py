@@ -7,7 +7,7 @@ import nodriver as uc
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-from types.match_report_types import GeneralMatchInfo, GoalInfo, normalize_minute
+from models.match_report_types import GeneralMatchInfo, GoalInfo, normalize_minute
 from core.browser import start_browser
 from core.logger import get_logger
 
@@ -19,7 +19,7 @@ def goal_list_creator(content) -> list:
         icon = goal.select_one("div[class*='event_icon']")
         icon_class = " ".join(icon.get("class", [])) if icon else ""
 
-        # goal, own_goal ve penalty_goal ikonlarının hepsi gol sayılır
+        # goal, own_goal and penalty_goal icons all count as goals
         if "goal" not in icon_class:
             continue
 
@@ -52,7 +52,7 @@ async def match_general_info_scraper(page ,url: str) -> GeneralMatchInfo:
     except Exception:
         raise RuntimeError(f"Page could not be loaded: {url}")
 
-    logger.info("Scraping successful")
+    logger.info("Scorebox loaded, scraping general match info")
 
     html_content = await page.get_content()
     soup = BeautifulSoup(html_content, 'html.parser')
@@ -61,7 +61,7 @@ async def match_general_info_scraper(page ,url: str) -> GeneralMatchInfo:
     if not scorebox:
         raise RuntimeError(f"Scorebox not found: {url}")
 
-    # Match id from url
+    # Match ID from URL
     try:
         id_match = re.search(r"/([0-9a-f]{8})(?:/|$)", url)
         info_obj.match_id = id_match.group(1) if id_match else None
@@ -115,8 +115,7 @@ async def match_general_info_scraper(page ,url: str) -> GeneralMatchInfo:
         info_obj.home_name = None
 
     # Home manager
-    # Datapoint is a class in this html code there is a 2 datapoint one of it
-    # give us a manager information other one captain
+    # Each team block has two "datapoint" divs: the first holds the manager, the second the captain
     try:
         datapoints = home_team_html.select('div[class="datapoint"]')
         info_obj.home_manager = datapoints[0].text.strip().replace("Manager: ", "").replace("\xa0", " ")

@@ -45,7 +45,7 @@ class PlayerStats(BaseModel):
     model_config = ConfigDict(extra="allow")
 
 class MatchPlayerStats(BaseModel):
-    # Kolon açıklamaları maçtan maça değişebildiği için tablo başına bir kez tutulur
+    # Column descriptions can vary from match to match, so they are stored once per table
     column_descriptions: dict[str, str] | None = None
     goalkeeper_column_descriptions: dict[str, str] | None = None
 

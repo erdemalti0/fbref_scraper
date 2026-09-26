@@ -6,7 +6,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
-from types.match_report_types import MatchPlayerStats
+from models.match_report_types import MatchPlayerStats
 from core.browser import start_browser
 from core.helper_functions import column_name_scraper, row_scraper, column_description_mapper
 from core.logger import get_logger

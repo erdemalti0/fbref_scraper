@@ -8,7 +8,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from core.browser import start_browser
 from core.storage import save
-from types.player_page_types import PlayerPage
+from models.player_page_types import PlayerPage
 from core.logger import get_logger
 from scrapers.player_page.player_info_scraper import player_info_scraper
 from scrapers.player_page.player_all_table_scraper import all_stats_scraper
@@ -32,12 +32,12 @@ async def scrape_page(page, url):
 
     player = PlayerPage()
 
-    scrappers = [
+    scrapers = [
         ("info", player_info_scraper(page, url)),
         ("all_stats", all_stats_scraper(page)),
     ]
 
-    for name, coro in scrappers:
+    for name, coro in scrapers:
         try:
             setattr(player, name, await coro)
         except Exception as e:

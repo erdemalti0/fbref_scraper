@@ -4,7 +4,7 @@ from pathlib import Path
 
 import nodriver as uc
 
-from types.club_page_by_season_types import ClubPageBySeason
+from models.club_page_by_season_types import ClubPageBySeason
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
